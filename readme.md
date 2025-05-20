@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/imKeim/DemoExam-SysNet-Admin/refs/heads/main/guido/guido_logo.png" alt="Guido Logo" width="200"/>
+  <img src="https://github.com/imKeim/Guido/blob/main/guido/guido_logo.png" alt="Guido Logo" width="200"/>
 </p>
 
 <h1 align="center">Guido: General Utility of Infrastructure Deployment Operations</h1>
