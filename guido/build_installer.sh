@@ -1,39 +1,30 @@
 #!/bin/bash
 # ==============================================================================
-# Скрипт сборки артефактов для "Guido"
+# Скрипт сборки артефактов для "Guido" (Оригинальная логика)
 #
-# РЕЖИМЫ РАБОТЫ:
-#
-#   1. По умолчанию (./build_installer.sh):
-#      Создает один файл 'guido_installer.oneliner.txt' с использованием
-#      эффективного метода (tar -> xz -> base64).
-#
-#   2. С разделением (--split-oneliner [размер]):
-#      Делает то же, что и по умолчанию, но дополнительно разбивает
-#      однострочник на части 'oneliner_part_*'.
-#
-#   3. Устаревший режим (--legacy-installer):
-#      Создает самодостаточный скрипт 'guido_installer.sh', который удобен
-#      для распространения единым файлом, но неэффективен для передачи
-#      через консоль.
+# 1. Создает самодостаточный 'guido_installer.sh' путем внедрения
+#    Base64-кодированной полезной нагрузки.
+# 2. При использовании флага --split-oneliner, сжимает готовый
+#    'guido_installer.sh', кодирует его в Base64 и разбивает на части.
 # ==============================================================================
 
 # === Блок: Определение путей и констант для сборки ===
 PAYLOAD_DIR="guido_payload"
-BUILD_OUTPUT_DIR="build_output"
-
-# Константы для самодостаточного установщика (устаревший режим)
 INSTALLER_TEMPLATE_SH="guido_installer.template.sh"
 INSTALLER_SH_BASENAME="guido_installer.sh"
+ARCHIVE_NAME_BASENAME="guido_payload.tar.gz"
+BASE64_FILE_BASENAME="guido_payload_base64.txt"
+FINAL_BASE64_ONELINER_FILE_BASENAME="guido_installer.oneliner.txt"
+BUILD_OUTPUT_DIR="build_output"
 PLACEHOLDER_STRING="%%PAYLOAD_BASE64_CONTENT%%"
 
-# Константы для эффективного однострочника (режим по умолчанию)
-ONELINER_PAYLOAD_ARCHIVE_BASENAME="guido_payload.oneliner.tar.xz"
-ONELINER_B64_BASENAME="guido_installer.oneliner.txt" # Изменено для консистентности
-
 # === Блок: Обработка аргументов командной строки ===
-SPLIT_ONELINER_BYTES=""
-LEGACY_MODE="no"
+# Для этого режима компрессор всегда xz для максимальной эффективности
+COMPRESSOR_CMD="xz -9 -c -T0"
+DECOMPRESSOR_CMD_ONELINER="unxz -c"
+COMPRESSED_EXT=".xz"
+
+SPLIT_ONELINER_BYTES="" # По умолчанию не разбивать
 
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -46,10 +37,6 @@ while [[ $# -gt 0 ]]; do
       fi
       shift 2
       ;;
-    --legacy-installer)
-      LEGACY_MODE="yes"
-      shift
-      ;;
     *)
       echo "Неизвестный параметр: $1"
       exit 1
@@ -57,113 +44,71 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# === Блок: Функция генерации инструкций для пользователя ===
-generate_split_instructions() {
-    local total_parts="$1"
-    echo ""
-    echo "##################################################################################"
-    echo "###                      ИНСТРУКЦИИ ПО ПЕРЕДАЧЕ И ЗАПУСКУ                      ###"
-    echo "##################################################################################"
-    echo ""
-    echo "Однострочник был разбит на ${total_parts} частей. Файлы частей находятся в каталоге '$BUILD_OUTPUT_DIR/'."
-    echo "Полные и готовые к копированию инструкции находятся в файле: docs/bootstrap.md"
-    echo ""
-    echo "--- Краткий план действий на целевой машине ---"
-    echo "1. ЭТАП 1: Скопируйте и вставьте большой подготовительный блок из 'docs/bootstrap.md'."
-    echo "2. ЭТАП 2: Для каждой части (с 1 по ${total_parts}) выполните:"
-    echo "   а) Напишите в терминале:  add_part [номер_части]"
-    echo "   б) Вставьте содержимое файла 'oneliner_part_XXX.b64part'."
-    echo "   в) На новой строке напишите: END_OF_PART"
-    echo "3. ЭТАП 3: После добавления всех частей, выполните команду:  run_guido ${total_parts}"
-    echo ""
-    echo "##################################################################################"
-}
+FINAL_INSTALLER_COMPRESSED_BASENAME="${INSTALLER_SH_BASENAME}${COMPRESSED_EXT}"
 
 # === Блок: Подготовка к сборке ===
-echo "--- Начало сборки артефактов Guido ---"
+echo "--- Начало сборки Guido Installer ---"
 mkdir -p "$BUILD_OUTPUT_DIR"
 echo "Каталог для артефактов сборки: '$BUILD_OUTPUT_DIR'."
 if [ ! -d "$PAYLOAD_DIR" ]; then echo "ОШИБКА: Каталог полезной нагрузки '$PAYLOAD_DIR' не найден!"; exit 1; fi
 if [ ! -f "$INSTALLER_TEMPLATE_SH" ]; then echo "ОШИБКА: Файл шаблона '$INSTALLER_TEMPLATE_SH' не найден!"; exit 1; fi
 echo "Все необходимые исходные файлы и каталоги найдены."
+rm -f "$BUILD_OUTPUT_DIR/$ARCHIVE_NAME_BASENAME" "$BUILD_OUTPUT_DIR/$BASE64_FILE_BASENAME"
 
-# ==============================================================================
-# ОСНОВНАЯ ЛОГИКА: ВЫБОР РЕЖИМА СБОРКИ
-# ==============================================================================
+# === Блок: Сборка основного установщика `guido_installer.sh` ===
+echo ""
+echo "--- Сборка стандартного скрипта-установщика (guido_installer.sh) ---"
+echo "1. Создание архива полезной нагрузки..."
+if ! tar -czf "$BUILD_OUTPUT_DIR/$ARCHIVE_NAME_BASENAME" -C "$PAYLOAD_DIR" .; then echo "ОШИБКА: Не удалось создать архив."; exit 1; fi
 
-if [ "$LEGACY_MODE" == "yes" ]; then
-    # --- РЕЖИМ 1: Сборка устаревшего самодостаточного установщика ---
-    echo ""
-    echo "--- Сборка в режиме --legacy-installer: создается guido_installer.sh ---"
-    temp_archive_gz="$BUILD_OUTPUT_DIR/temp_payload.tar.gz"
-    temp_base64_txt="$BUILD_OUTPUT_DIR/temp_payload_b64.txt"
-    final_installer_path="$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME"
-    rm -f "$temp_archive_gz" "$temp_base64_txt"
+echo "2. Кодирование архива в Base64..."
+if ! base64 -w 0 "$BUILD_OUTPUT_DIR/$ARCHIVE_NAME_BASENAME" > "$BUILD_OUTPUT_DIR/$BASE64_FILE_BASENAME"; then echo "ОШИБКА: Не удалось закодировать архив."; exit 1; fi
 
-    echo "1. Создание архива полезной нагрузки..."
-    if ! tar -czf "$temp_archive_gz" -C "$PAYLOAD_DIR" . ; then echo "ОШИБКА: Не удалось создать архив."; exit 1; fi
+echo "3. Внедрение Base64-строки в шаблон установщика..."
+payload_base64_content=$(cat "$BUILD_OUTPUT_DIR/$BASE64_FILE_BASENAME")
+if [ -z "$payload_base64_content" ]; then echo "ОШИБКА: Содержимое Base64 файла пустое."; exit 1; fi
 
-    echo "2. Кодирование архива в Base64..."
-    if ! base64 -w 0 "$temp_archive_gz" > "$temp_base64_txt"; then echo "ОШИБКА: Не удалось закодировать архив."; rm -f "$temp_archive_gz"; exit 1; fi
+# Используем оригинальный метод 'awk', который у вас работал
+awk -v payload="$payload_base64_content" -v placeholder="$PLACEHOLDER_STRING" '{ if (index($0, placeholder) > 0) { sub(placeholder, payload); } print; }' "$INSTALLER_TEMPLATE_SH" > "$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME"
 
-    echo "3. Внедрение Base64-строки в шаблон установщика..."
-    if ! sed -e "/${PLACEHOLDER_STRING}/r ${temp_base64_txt}" -e "/${PLACEHOLDER_STRING}/d" "${INSTALLER_TEMPLATE_SH}" > "${final_installer_path}"; then
-        echo "ОШИБКА: Не удалось выполнить подстановку с помощью sed."; exit 1
-    fi
-
-    if [ -s "$final_installer_path" ]; then
-        chmod +x "$final_installer_path"
-        echo "Успешно создан: $final_installer_path (Готов для копирования как единый файл)"
-    else
-        echo "ОШИБКА: Не удалось создать финальный '$final_installer_path' или он пустой.";
-    fi
-    rm -f "$temp_archive_gz" "$temp_base64_txt"
-
+if [ $? -eq 0 ] && [ -s "$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME" ]; then
+    chmod +x "$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME"
+    echo "Успешно создан: $BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME (Готов для копирования как единый файл)"
 else
-    # --- РЕЖИМ 2: Сборка эффективного однострочника (по умолчанию) ---
+    echo "ОШИБКА: Не удалось создать финальный '$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME' или он пустой."; exit 1;
+fi
+rm -f "$BUILD_OUTPUT_DIR/$ARCHIVE_NAME_BASENAME" "$BUILD_OUTPUT_DIR/$BASE64_FILE_BASENAME"
+
+# === Блок: Генерация однострочника (если запрошено) ===
+if [ -n "$SPLIT_ONELINER_BYTES" ]; then
     echo ""
-    echo "--- Сборка в режиме по умолчанию: создается эффективный однострочник ---"
-    
-    if ! command -v xz &> /dev/null; then echo "ОШИБКА: Для этого режима требуется компрессор 'xz'."; exit 1; fi
+    echo "--- Начало генерации однострочника (компрессор: xz) ---"
+    rm -f "$BUILD_OUTPUT_DIR/$FINAL_INSTALLER_COMPRESSED_BASENAME" "$BUILD_OUTPUT_DIR/$FINAL_BASE64_ONELINER_FILE_BASENAME" "$BUILD_OUTPUT_DIR/oneliner_part_"*
 
-    temp_archive_xz="$BUILD_OUTPUT_DIR/$ONELINER_PAYLOAD_ARCHIVE_BASENAME"
-    final_oneliner_path="$BUILD_OUTPUT_DIR/$ONELINER_B64_BASENAME"
-    rm -f "$temp_archive_xz" "$final_oneliner_path" "$BUILD_OUTPUT_DIR/oneliner_part_"*
+    echo "1. Сжатие готового '$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME'..."
+    if ! $COMPRESSOR_CMD "$BUILD_OUTPUT_DIR/$INSTALLER_SH_BASENAME" > "$BUILD_OUTPUT_DIR/$FINAL_INSTALLER_COMPRESSED_BASENAME"; then
+        echo "ОШИБКА: Не удалось сжать '$INSTALLER_SH_BASENAME'."
+        exit 1
+    fi
 
-    echo "1. Архивируем и сжимаем '$PAYLOAD_DIR' напрямую (tar | xz)..."
-    if ! tar -c -C "$PAYLOAD_DIR" . | xz -9 -c -T0 > "$temp_archive_xz"; then
-        echo "ОШИБКА: Не удалось создать сжатый архив полезной нагрузки."; exit 1
+    echo "2. Кодирование сжатого установщика в Base64..."
+    if ! base64 -w 0 "$BUILD_OUTPUT_DIR/$FINAL_INSTALLER_COMPRESSED_BASENAME" > "$BUILD_OUTPUT_DIR/$FINAL_BASE64_ONELINER_FILE_BASENAME"; then
+        echo "ОШИБКА: Не удалось закодировать сжатый установщик в Base64."; exit 1
     fi
     
-    echo "2. Кодируем сжатый архив в Base64..."
-    if ! base64 -w 0 "$temp_archive_xz" > "$final_oneliner_path"; then
-        echo "ОШИБКА: Не удалось закодировать сжатый архив в Base64."; rm -f "$temp_archive_xz"; exit 1
+    echo "3. Разбиение итоговой Base64-строки на части по $SPLIT_ONELINER_BYTES байт..."
+    split -b "$SPLIT_ONELINER_BYTES" -a 3 -d --additional-suffix="${COMPRESSED_EXT}.b64part" "$BUILD_OUTPUT_DIR/$FINAL_BASE64_ONELINER_FILE_BASENAME" "$BUILD_OUTPUT_DIR/oneliner_part_"
+    
+    if [ $? -eq 0 ]; then
+        total_parts_created=$(ls "$BUILD_OUTPUT_DIR"/oneliner_part_*.b64part 2>/dev/null | wc -l)
+        echo "Однострочник успешно разбит на $total_parts_created частей."
+        echo "Части сохранены в: $BUILD_OUTPUT_DIR/oneliner_part_*.b64part"
+    else
+        echo "ОШИБКА: Не удалось разбить однострочник на части."
     fi
-
-    original_payload_size=$(du -sb "$PAYLOAD_DIR" | awk '{print $1}')
-    compressed_payload_size=$(wc -c < "$temp_archive_xz")
-    final_b64_size=$(wc -c < "$final_oneliner_path")
-    echo "Размеры: Исходный payload: $original_payload_size байт | Сжатый (tar.xz): $compressed_payload_size байт | Итоговый Base64: $final_b64_size байт."
-    echo "Успешно создан: $final_oneliner_path"
-
-    # Дополнительный шаг: разбиение на части, если указан флаг
-    if [ -n "$SPLIT_ONELINER_BYTES" ]; then
-        echo ""
-        echo "3. Разбиение итоговой Base64-строки на части по $SPLIT_ONELINER_BYTES байт..."
-        split -b "$SPLIT_ONELINER_BYTES" -a 3 -d --additional-suffix=".b64part" "$final_oneliner_path" "$BUILD_OUTPUT_DIR/oneliner_part_"
-        
-        if [ $? -eq 0 ]; then
-            total_parts_created=$(ls "$BUILD_OUTPUT_DIR"/oneliner_part_*.b64part 2>/dev/null | wc -l)
-            echo "Однострочник успешно разбит на $total_parts_created частей."
-            echo "Части сохранены в: $BUILD_OUTPUT_DIR/oneliner_part_*.b64part"
-            generate_split_instructions "$total_parts_created"
-        else
-            echo "ОШИБКА: Не удалось разбить однострочник на части."
-        fi
-    fi
-
-    # Очистка временных файлов
-    rm -f "$temp_archive_xz"
+    
+    # Очистка
+    rm -f "$BUILD_OUTPUT_DIR/$FINAL_INSTALLER_COMPRESSED_BASENAME" "$BUILD_OUTPUT_DIR/$FINAL_BASE64_ONELINER_FILE_BASENAME"
 fi
 
 echo ""
