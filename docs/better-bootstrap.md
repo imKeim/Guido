@@ -8,8 +8,11 @@
 # Или временно отключите историю: set +o history
 
 # --- НАЧАЛО БЛОКА ДЛЯ КОПИРОВАНИЯ ---
-clear
-export TMP_B64_ASSEMBLY_FILE=$(mktemp --tmpdir=/dev/shm guido_payload.XXXXXX.b64 2>/dev/null) || export TMP_B64_ASSEMBLY_FILE=$(mktemp /tmp/guido_payload.XXXXXX.b64)
+ clear
+ # Включаем функцию игнорирования команд с пробелом для чистоты истории
+ export HISTCONTROL=ignorespace
+ 
+ export TMP_B64_ASSEMBLY_FILE=$(mktemp --tmpdir=/dev/shm guido_payload.XXXXXX.b64 2>/dev/null) || export TMP_B64_ASSEMBLY_FILE=$(mktemp /tmp/guido_payload.XXXXXX.b64)
 
 # Определяем вспомогательную функцию для удобного добавления частей
 add_part() {
@@ -49,7 +52,6 @@ run_guido() {
     echo "======================================================================"
     echo ""
 
-    # Команда запуска с последующей полной очисткой
     (base64 -d "$TMP_B64_ASSEMBLY_FILE" | unxz -c | bash -s -- -p -c de24) && \
       (echo -e '\n\033[1;32m[SUCCESS]\033[0m Скрипт Guido завершен УСПЕШНО.') || \
       (echo -e '\n\033[1;31m[ERROR]\033[0m !!! ОШИБКА !!! Скрипт Guido завершился с ошибкой (возможно, части были скопированы неверно).')
@@ -78,12 +80,12 @@ echo ""
 # 2. На ЦЕЛЕВОЙ машине: выполните команду 'add_part N', вставьте скопированное и завершите маркером 'END_OF_PART'.
 
 # <<< Передача ЧАСТИ 1 >>>
-add_part 1
+ add_part 1
 # (СЮДА ВСТАВИТЬ СОДЕРЖИМОЕ oneliner_part_000.xz.b64part)
 END_OF_PART
 
 # <<< Передача ЧАСТИ 2 >>>
-add_part 2
+ add_part 2
 # (СЮДА ВСТАВИТЬ СОДЕРЖИМОЕ oneliner_part_001.xz.b64part)
 END_OF_PART
 
@@ -94,7 +96,7 @@ END_OF_PART
 # (Выполняется один раз после передачи ВСЕХ частей)
 
 # Укажите в команде общее количество частей (в данном случае 2)
-run_guido 2
+ run_guido 2
 
 # (Опционально) Если отключали историю:
 # set -o history
