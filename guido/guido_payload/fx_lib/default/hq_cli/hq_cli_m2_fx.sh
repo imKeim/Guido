@@ -126,7 +126,7 @@ setup_hq_cli_m2_samba_ad_join() {
     local ad_dom_netbios_val; ask_param "NetBIOS имя домена AD" "$m2_br_srv_samba_domain_netbios" "ad_dom_netbios_val"
     local ad_admin_user_val; ask_param "Имя администратора домена AD" "$m2_hq_cli_samba_admin_user" "ad_admin_user_val"
     local ad_admin_pass_val; ask_param "Пароль администратора домена AD ('${ad_admin_user_val}')" "$m2_br_srv_samba_admin_pass_def" "ad_admin_pass_val"
-    local hqcli_short_hn_val="hq-cli"
+    local hq_cli_short_hn_val="hq-cli"
 
     log_msg "${P_INFO} Принудительная синхронизация времени с NTP-сервером (chronyc burst)..."
     if ! chronyc burst 4/10; then
@@ -137,9 +137,9 @@ setup_hq_cli_m2_samba_ad_join() {
     sleep 2
 
     log_msg "${P_INFO} Попытка ввода в домен ${C_CYAN}$ad_realm_upper_val${C_RESET} с использованием 'system-auth'..."
-    if system-auth write ad "$ad_realm_upper_val" "$hqcli_short_hn_val" "$ad_dom_netbios_val" "$ad_admin_user_val" "$ad_admin_pass_val"; then
+    if system-auth write ad "$ad_realm_upper_val" "$hq_cli_short_hn_val" "$ad_dom_netbios_val" "$ad_admin_user_val" "$ad_admin_pass_val"; then
         log_msg "${P_OK} Команда 'system-auth write ad' успешно выполнена."
-        reg_sneaky_cmd "system-auth write ad $ad_realm_upper_val $hqcli_short_hn_val $ad_dom_netbios_val $ad_admin_user_val ***"
+        reg_sneaky_cmd "system-auth write ad $ad_realm_upper_val $hq_cli_short_hn_val $ad_dom_netbios_val $ad_admin_user_val ***"
         sleep 5
         
         log_msg "${P_INFO} Проверка статуса домена командой 'realm list'..."
@@ -398,27 +398,27 @@ setup_hq_cli_m2_wait_yabrowser_inst() {
 setup_hq_cli_m2_copy_localsettings_to_br_srv_pmt() {
     log_msg "${P_ACTION} Копирование LocalSettings.php с HQ_CLI на BR_SRV..."
     
-    local localsettings_pth_on_hqcli_def_val="$m2_hq_cli_localsettings_download_pth_def"
-    local localsettings_pth_on_hqcli_val; ask_param "Полный путь к файлу LocalSettings.php на HQ_CLI" "$localsettings_pth_on_hqcli_def_val" "localsettings_pth_on_hqcli_val"
+    local localsettings_pth_on_hq_cli_def_val="$m2_hq_cli_localsettings_download_pth_def"
+    local localsettings_pth_on_hq_cli_val; ask_param "Полный путь к файлу LocalSettings.php на HQ_CLI" "$localsettings_pth_on_hq_cli_def_val" "localsettings_pth_on_hq_cli_val"
 
-    if [[ ! -f "$localsettings_pth_on_hqcli_val" ]]; then
-        log_msg "${P_WARN} Файл '${C_YELLOW}$localsettings_pth_on_hqcli_val${P_WARN}' не найден на HQ_CLI. Пропуск."
+    if [[ ! -f "$localsettings_pth_on_hq_cli_val" ]]; then
+        log_msg "${P_WARN} Файл '${C_YELLOW}$localsettings_pth_on_hq_cli_val${P_WARN}' не найден на HQ_CLI. Пропуск."
         return 0
     fi
 
-    local brsrv_target_ip_val; brsrv_target_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
-    local brsrv_target_ssh_port_val="$DEF_SSH_PORT"
-    local brsrv_target_user_val="sshuser"
-    local brsrv_target_pth_for_ls_val="$m2_br_srv_wiki_localsettings_pth_on_brsrv"
+    local br_srv_target_ip_val; br_srv_target_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local br_srv_target_ssh_port_val="$DEF_SSH_PORT"
+    local br_srv_target_user_val="sshuser"
+    local br_srv_target_pth_for_ls_val="$m2_br_srv_wiki_localsettings_pth_on_br_srv"
 
-    log_msg "${P_INFO} Попытка скопировать файл '${C_CYAN}$localsettings_pth_on_hqcli_val${C_RESET}'"
-    log_msg "${P_INFO} на ${C_CYAN}${brsrv_target_user_val}@${brsrv_target_ip_val}:${brsrv_target_pth_for_ls_val}${C_RESET} (порт ${C_CYAN}$brsrv_target_ssh_port_val${C_RESET})."
-    log_msg "${P_ACTION} ${C_BOLD_YELLOW}Может потребоваться ввести пароль для пользователя '${C_CYAN}$brsrv_target_user_val${C_RESET}' на BR_SRV (пароль по умолчанию: ${C_YELLOW}$DEF_SSHUSER_PASS${C_YELLOW}).${C_RESET}"
+    log_msg "${P_INFO} Попытка скопировать файл '${C_CYAN}$localsettings_pth_on_hq_cli_val${C_RESET}'"
+    log_msg "${P_INFO} на ${C_CYAN}${br_srv_target_user_val}@${br_srv_target_ip_val}:${br_srv_target_pth_for_ls_val}${C_RESET} (порт ${C_CYAN}$br_srv_target_ssh_port_val${C_RESET})."
+    log_msg "${P_ACTION} ${C_BOLD_YELLOW}Может потребоваться ввести пароль для пользователя '${C_CYAN}$br_srv_target_user_val${C_RESET}' на BR_SRV (пароль по умолчанию: ${C_YELLOW}$DEF_SSHUSER_PASS${C_YELLOW}).${C_RESET}"
     
-    if scp -P "$brsrv_target_ssh_port_val" "$localsettings_pth_on_hqcli_val" "${brsrv_target_user_val}@${brsrv_target_ip_val}:${brsrv_target_pth_for_ls_val}"; then
+    if scp -P "$br_srv_target_ssh_port_val" "$localsettings_pth_on_hq_cli_val" "${br_srv_target_user_val}@${br_srv_target_ip_val}:${br_srv_target_pth_for_ls_val}"; then
         log_msg "${P_OK} Файл LocalSettings.php успешно скопирован на BR_SRV."
         log_msg "${P_ACTION} ${C_BOLD_MAGENTA}Не забудьте перезапустить скрипт на BR_SRV (шаг 'Apply LocalSettings'), чтобы изменения вступили в силу!${C_RESET}"
-        reg_sneaky_cmd "scp -P $brsrv_target_ssh_port_val $localsettings_pth_on_hqcli_val ${brsrv_target_user_val}@${brsrv_target_ip_val}:${brsrv_target_pth_for_ls_val}"
+        reg_sneaky_cmd "scp -P $br_srv_target_ssh_port_val $localsettings_pth_on_hq_cli_val ${br_srv_target_user_val}@${br_srv_target_ip_val}:${br_srv_target_pth_for_ls_val}"
         return 0
     else
         log_msg "${P_ERROR} Ошибка при копировании файла LocalSettings.php на BR_SRV."

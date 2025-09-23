@@ -52,7 +52,7 @@ setup_br_rtr_m2_dnat_wiki_ssh_to_br_srv() {
         return 1
     fi
 
-    local brsrv_int_ip_val; brsrv_int_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local br_srv_int_ip_val; br_srv_int_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
     
     local dnat_listen_iface_val; ask_param "Интерфейс BR_RTR для приема DNAT-трафика (LAN-интерфейс)" "$m1_br_rtr_lan_iface" "dnat_listen_iface_val"
 
@@ -60,23 +60,23 @@ setup_br_rtr_m2_dnat_wiki_ssh_to_br_srv() {
     local wiki_int_port_def_val="$m2_nginx_wiki_backend_port_def"
     local wiki_int_port_val; ask_val_param "Внутренний порт MediaWiki на BR_SRV" "$wiki_int_port_def_val" "is_port_valid" "wiki_int_port_val"
 
-    local dnat_ssh_port_on_brrtr_val; ask_val_param "Порт на BR_RTR для DNAT SSH на BR_SRV" "$m2_dnat_br_rtr_to_br_srv_ssh_port_var" "is_port_valid" "dnat_ssh_port_on_brrtr_val"
-    local brsrv_int_ssh_port_val="$DEF_SSH_PORT"
+    local dnat_ssh_port_on_br_rtr_val; ask_val_param "Порт на BR_RTR для DNAT SSH на BR_SRV" "$m2_dnat_br_rtr_to_br_srv_ssh_port_var" "is_port_valid" "dnat_ssh_port_on_br_rtr_val"
+    local br_srv_int_ssh_port_val="$DEF_SSH_PORT"
 
-    if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_wiki_ext_port_val" -j DNAT --to-destination "${brsrv_int_ip_val}:${wiki_int_port_val}" &>/dev/null; then
-        iptables -t nat -A PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_wiki_ext_port_val" -j DNAT --to-destination "${brsrv_int_ip_val}:${wiki_int_port_val}"
-        log_msg "${P_OK} Правило DNAT для Wiki (порт ${C_CYAN}$dnat_wiki_ext_port_val${C_GREEN} -> ${brsrv_int_ip_val}:${wiki_int_port_val}) добавлено."
-        reg_sneaky_cmd "iptables -t nat -A PREROUTING -i $dnat_listen_iface_val -p tcp --dport $dnat_wiki_ext_port_val -j DNAT --to ${brsrv_int_ip_val}:${wiki_int_port_val}"
+    if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_wiki_ext_port_val" -j DNAT --to-destination "${br_srv_int_ip_val}:${wiki_int_port_val}" &>/dev/null; then
+        iptables -t nat -A PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_wiki_ext_port_val" -j DNAT --to-destination "${br_srv_int_ip_val}:${wiki_int_port_val}"
+        log_msg "${P_OK} Правило DNAT для Wiki (порт ${C_CYAN}$dnat_wiki_ext_port_val${C_GREEN} -> ${br_srv_int_ip_val}:${wiki_int_port_val}) добавлено."
+        reg_sneaky_cmd "iptables -t nat -A PREROUTING -i $dnat_listen_iface_val -p tcp --dport $dnat_wiki_ext_port_val -j DNAT --to ${br_srv_int_ip_val}:${wiki_int_port_val}"
     else
         log_msg "${P_INFO} Правило DNAT для Wiki (порт ${C_CYAN}$dnat_wiki_ext_port_val${C_RESET}) уже существует."
     fi
 
-    if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ssh_port_on_brrtr_val" -j DNAT --to-destination "${brsrv_int_ip_val}:${brsrv_int_ssh_port_val}" &>/dev/null; then
-        iptables -t nat -A PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ssh_port_on_brrtr_val" -j DNAT --to-destination "${brsrv_int_ip_val}:${brsrv_int_ssh_port_val}"
-        log_msg "${P_OK} Правило DNAT для SSH (порт ${C_CYAN}$dnat_ssh_port_on_brrtr_val${C_GREEN} -> ${brsrv_int_ip_val}:${brsrv_int_ssh_port_val}) добавлено."
-        reg_sneaky_cmd "iptables -t nat -A PREROUTING -i $dnat_listen_iface_val -p tcp --dport $dnat_ssh_port_on_brrtr_val -j DNAT --to ${brsrv_int_ip_val}:${brsrv_int_ssh_port_val}"
+    if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ssh_port_on_br_rtr_val" -j DNAT --to-destination "${br_srv_int_ip_val}:${br_srv_int_ssh_port_val}" &>/dev/null; then
+        iptables -t nat -A PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ssh_port_on_br_rtr_val" -j DNAT --to-destination "${br_srv_int_ip_val}:${br_srv_int_ssh_port_val}"
+        log_msg "${P_OK} Правило DNAT для SSH (порт ${C_CYAN}$dnat_ssh_port_on_br_rtr_val${C_GREEN} -> ${br_srv_int_ip_val}:${br_srv_int_ssh_port_val}) добавлено."
+        reg_sneaky_cmd "iptables -t nat -A PREROUTING -i $dnat_listen_iface_val -p tcp --dport $dnat_ssh_port_on_br_rtr_val -j DNAT --to ${br_srv_int_ip_val}:${br_srv_int_ssh_port_val}"
     else
-        log_msg "${P_INFO} Правило DNAT для SSH (порт ${C_CYAN}$dnat_ssh_port_on_brrtr_val${C_RESET}) уже существует."
+        log_msg "${P_INFO} Правило DNAT для SSH (порт ${C_CYAN}$dnat_ssh_port_on_br_rtr_val${C_RESET}) уже существует."
     fi
     
     if ! iptables-save > /etc/sysconfig/iptables; then

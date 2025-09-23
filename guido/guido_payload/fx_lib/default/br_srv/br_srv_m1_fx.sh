@@ -165,20 +165,20 @@ setup_br_srv_m1_tz() {
 setup_br_srv_m1_dns_cli_final() {
     log_msg "${P_ACTION} Финальная настройка DNS-клиента для BR_SRV..."
     local lan_iface_for_dns_val="$m1_br_srv_lan_iface"
-    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
-    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
-    hqsrv_dns_ip_val=$(get_ip_only "$hqsrv_dns_ip_val")
+    local hq_srv_dns_ip_def_val; hq_srv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hq_srv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hq_srv_dns_ip_def_val" "is_ipcidr_valid" "hq_srv_dns_ip_val"
+    hq_srv_dns_ip_val=$(get_ip_only "$hq_srv_dns_ip_val")
     
     mkdir -p "/etc/net/ifaces/${lan_iface_for_dns_val}"
     if ! cat <<EOF > "/etc/net/ifaces/${lan_iface_for_dns_val}/resolv.conf"
 search ${DOM_NAME}
-nameserver ${hqsrv_dns_ip_val}
+nameserver ${hq_srv_dns_ip_val}
 EOF
     then
         log_msg "${P_ERROR} Ошибка создания resolv.conf для интерфейса ${C_BOLD_RED}${lan_iface_for_dns_val}${P_ERROR}."; return 1
     fi
-    log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}${lan_iface_for_dns_val}${C_GREEN} настроен (DNS: $hqsrv_dns_ip_val)."
-    reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hqsrv_dns_ip_val}' > /etc/net/ifaces/${lan_iface_for_dns_val}/resolv.conf"
+    log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}${lan_iface_for_dns_val}${C_GREEN} настроен (DNS: $hq_srv_dns_ip_val)."
+    reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hq_srv_dns_ip_val}' > /etc/net/ifaces/${lan_iface_for_dns_val}/resolv.conf"
 
     set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на BR_SRV"
     log_msg "${P_OK} Файл /etc/resolvconf.conf настроен."

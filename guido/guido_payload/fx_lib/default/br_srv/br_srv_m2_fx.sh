@@ -307,25 +307,25 @@ setup_br_srv_m2_ansible_inst_ssh_key_gen() {
 # Функция: setup_br_srv_m2_ansible_ssh_copy_id_pmt
 # Назначение: Информирует о необходимости скопировать SSH-ключ Ansible.
 setup_br_srv_m2_ansible_ssh_copy_id_pmt() {
-    local vm_role_code="BRSRV"; local mod_num_val="2"
+    local vm_role_code="BR_SRV"; local mod_num_val="2"
     local flag_manual_ssh_copy_pending_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_pending_manual.flag"
     
     local ssh_pub_key_pth_val="${m2_br_srv_ansible_ssh_key_pth}.pub"
     
-    local hqsrv_target_ip_val; hqsrv_target_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
-    local hqsrv_target_ssh_port_val="$DEF_SSH_PORT"
-    local hqcli_target_ip_val; hqcli_target_ip_val=$(get_ip_only "$m1_hq_cli_dhcp_reserved_ip_def")
-    local hqrtr_target_wan_ip_val; hqrtr_target_wan_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
-    local brrtr_target_wan_ip_val; brrtr_target_wan_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
+    local hq_srv_target_ip_val; hq_srv_target_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hq_srv_target_ssh_port_val="$DEF_SSH_PORT"
+    local hq_cli_target_ip_val; hq_cli_target_ip_val=$(get_ip_only "$m1_hq_cli_dhcp_reserved_ip_def")
+    local hq_rtr_target_wan_ip_val; hq_rtr_target_wan_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
+    local br_rtr_target_wan_ip_val; br_rtr_target_wan_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
 
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ТРЕБУЕТСЯ РУЧНОЕ ДЕЙСТВИЕ: Копирование публичного SSH-ключа Ansible${C_RESET}"
     log_msg "${P_ACTION}   Публичный ключ: ${C_CYAN}$ssh_pub_key_pth_val${C_RESET}"
     log_msg "${P_ACTION}   Используйте команду: ${C_CYAN}ssh-copy-id -i ${ssh_pub_key_pth_val} [опции_порта] пользователь@хост${C_RESET}"
     log_msg "${P_ACTION}   ${C_BOLD_YELLOW}Целевые хосты и пользователи:${C_RESET}"
-    log_msg "${P_ACTION}     1. HQ_SRV: ${C_CYAN}${m2_br_srv_ansible_hq_srv_user}@${hqsrv_target_ip_val} -p ${hqsrv_target_ssh_port_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_SSHUSER_PASS${C_RESET})"
-    log_msg "${P_ACTION}     2. HQ_CLI: ${C_CYAN}${m2_br_srv_ansible_hq_cli_user}@${hqcli_target_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$m2_br_srv_ansible_hq_cli_pass_def${C_RESET}) ${C_DIM}(SSH на HQ_CLI должен быть включен, и HQ_CLI должен быть в домене)${C_RESET}"
-    log_msg "${P_ACTION}     3. HQ_RTR: ${C_CYAN}${m2_br_srv_ansible_rtr_user}@${hqrtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
-    log_msg "${P_ACTION}     4. BR_RTR: ${C_CYAN}${m2_br_srv_ansible_rtr_user}@${brrtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
+    log_msg "${P_ACTION}     1. HQ_SRV: ${C_CYAN}${m2_br_srv_ansible_hq_srv_user}@${hq_srv_target_ip_val} -p ${hq_srv_target_ssh_port_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_SSHUSER_PASS${C_RESET})"
+    log_msg "${P_ACTION}     2. HQ_CLI: ${C_CYAN}${m2_br_srv_ansible_hq_cli_user}@${hq_cli_target_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$m2_br_srv_ansible_hq_cli_pass_def${C_RESET}) ${C_DIM}(SSH на HQ_CLI должен быть включен, и HQ_CLI должен быть в домене)${C_RESET}"
+    log_msg "${P_ACTION}     3. HQ_RTR: ${C_CYAN}${m2_br_srv_ansible_rtr_user}@${hq_rtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
+    log_msg "${P_ACTION}     4. BR_RTR: ${C_CYAN}${m2_br_srv_ansible_rtr_user}@${br_rtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
     log_msg "${P_ACTION} ${C_BOLD_YELLOW}После успешного копирования ключа на ВСЕ указанные хосты, вернитесь в этот терминал и продолжите выполнение скрипта.${C_RESET}"
     
     touch "$flag_manual_ssh_copy_pending_val"
@@ -335,7 +335,7 @@ setup_br_srv_m2_ansible_ssh_copy_id_pmt() {
 # Функция: setup_br_srv_m2_ansible_cfg_files
 # Назначение: Создает конфигурационные файлы Ansible и проверяет доступность хостов.
 setup_br_srv_m2_ansible_cfg_files() {
-    local vm_role_code="BRSRV"; local mod_num_val="2"
+    local vm_role_code="BR_SRV"; local mod_num_val="2"
     local flag_manual_ssh_copy_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_br_srv_m2_ansible_ssh_copy_id_pmt_pending_manual.flag"
     if [[ ! -f "$flag_manual_ssh_copy_pending_prev_step_val" ]]; then
         log_msg "${P_WARN} Предыдущий шаг (копирование SSH-ключей Ansible) не был отмечен как ожидающий. Убедитесь, что ключи скопированы."
@@ -343,25 +343,25 @@ setup_br_srv_m2_ansible_cfg_files() {
 
     log_msg "${P_ACTION} Создание конфигурационных файлов Ansible на BR_SRV..."
     
-    local hqsrv_ansible_ip_val; hqsrv_ansible_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
-    local hqsrv_ansible_ssh_port_val="$DEF_SSH_PORT"
-    local hqcli_ansible_ip_val; hqcli_ansible_ip_val=$(get_ip_only "$m1_hq_cli_dhcp_reserved_ip_def")
-    local hqrtr_ansible_wan_ip_val; hqrtr_ansible_wan_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
-    local brrtr_ansible_wan_ip_val; brrtr_ansible_wan_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
-    local brsrv_ansible_self_ip_val; brsrv_ansible_self_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
-    local brsrv_ansible_self_ssh_port_val="$DEF_SSH_PORT"
+    local hq_srv_ansible_ip_val; hq_srv_ansible_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hq_srv_ansible_ssh_port_val="$DEF_SSH_PORT"
+    local hq_cli_ansible_ip_val; hq_cli_ansible_ip_val=$(get_ip_only "$m1_hq_cli_dhcp_reserved_ip_def")
+    local hq_rtr_ansible_wan_ip_val; hq_rtr_ansible_wan_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
+    local br_rtr_ansible_wan_ip_val; br_rtr_ansible_wan_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
+    local br_srv_ansible_self_ip_val; br_srv_ansible_self_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local br_srv_ansible_self_ssh_port_val="$DEF_SSH_PORT"
 
     mkdir -p /etc/ansible
     
     if ! cat <<EOF > /etc/ansible/hosts
 [hq]
-${hqsrv_ansible_ip_val} ansible_user=${m2_br_srv_ansible_hq_srv_user} ansible_port=${hqsrv_ansible_ssh_port_val}
-${hqcli_ansible_ip_val} ansible_user=${m2_br_srv_ansible_hq_cli_user}
-${hqrtr_ansible_wan_ip_val} ansible_user=${m2_br_srv_ansible_rtr_user}
+${hq_srv_ansible_ip_val} ansible_user=${m2_br_srv_ansible_hq_srv_user} ansible_port=${hq_srv_ansible_ssh_port_val}
+${hq_cli_ansible_ip_val} ansible_user=${m2_br_srv_ansible_hq_cli_user}
+${hq_rtr_ansible_wan_ip_val} ansible_user=${m2_br_srv_ansible_rtr_user}
 
 [br]
-${brrtr_ansible_wan_ip_val} ansible_user=${m2_br_srv_ansible_rtr_user}
-${brsrv_ansible_self_ip_val} ansible_user=${m2_br_srv_ansible_hq_srv_user} ansible_port=${brsrv_ansible_self_ssh_port_val} ansible_connection=local
+${br_rtr_ansible_wan_ip_val} ansible_user=${m2_br_srv_ansible_rtr_user}
+${br_srv_ansible_self_ip_val} ansible_user=${m2_br_srv_ansible_hq_srv_user} ansible_port=${br_srv_ansible_self_ssh_port_val} ansible_connection=local
 EOF
     then
         log_msg "${P_ERROR} Ошибка записи в /etc/ansible/hosts."; return 1
@@ -430,8 +430,8 @@ setup_br_srv_m2_docker_mediawiki_inst_p1_compose_up() {
     reg_sneaky_cmd "docker volume create $wiki_img_vol_name_val"
 
     local wiki_db_pass_val; ask_param "Пароль для пользователя БД MediaWiki ('${m2_br_srv_wiki_db_user}')" "$m2_br_srv_wiki_db_pass_def" "wiki_db_pass_val"
-    local wiki_ext_port_on_brsrv_def_val="$m2_nginx_wiki_backend_port_def"
-    local wiki_ext_port_on_brsrv_val; ask_val_param "Порт на BR_SRV для доступа к MediaWiki" "$wiki_ext_port_on_brsrv_def_val" "is_port_valid" "wiki_ext_port_on_brsrv_val"
+    local wiki_ext_port_on_br_srv_def_val="$m2_nginx_wiki_backend_port_def"
+    local wiki_ext_port_on_br_srv_val; ask_val_param "Порт на BR_SRV для доступа к MediaWiki" "$wiki_ext_port_on_br_srv_def_val" "is_port_valid" "wiki_ext_port_on_br_srv_val"
     
     local docker_compose_pth_val="$m2_br_srv_docker_compose_pth"
     mkdir -p "$(dirname "$docker_compose_pth_val")" && chown sshuser:sshuser "$(dirname "$docker_compose_pth_val")"
@@ -444,7 +444,7 @@ services:
     image: mediawiki:lts
     restart: always
     ports:
-      - "${wiki_ext_port_on_brsrv_val}:80"
+      - "${wiki_ext_port_on_br_srv_val}:80"
     links:
       - mariadb:mariadb
     volumes:
@@ -490,15 +490,15 @@ EOF
 # Функция: setup_br_srv_m2_docker_mediawiki_inst_p2_web_setup_pmt
 # Назначение: Информирует о необходимости веб-установки MediaWiki.
 setup_br_srv_m2_docker_mediawiki_inst_p2_web_setup_pmt() {
-    local vm_role_code="BRSRV"; local mod_num_val="2"
+    local vm_role_code="BR_SRV"; local mod_num_val="2"
     local flag_manual_web_wiki_pending_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_pending_manual.flag"
     
-    local brsrv_lan_ip_for_url_val; brsrv_lan_ip_for_url_val=$(get_ip_only "$m1_br_srv_lan_ip")
-    local wiki_ext_port_on_brsrv_val; ask_val_param "Порт MediaWiki на BR_SRV (для URL веб-установки)" "$m2_nginx_wiki_backend_port_def" "is_port_valid" "wiki_ext_port_on_brsrv_val"
+    local br_srv_lan_ip_for_url_val; br_srv_lan_ip_for_url_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local wiki_ext_port_on_br_srv_val; ask_val_param "Порт MediaWiki на BR_SRV (для URL веб-установки)" "$m2_nginx_wiki_backend_port_def" "is_port_valid" "wiki_ext_port_on_br_srv_val"
     local wiki_db_pass_pmt_val; ask_param "Пароль пользователя БД MediaWiki ('${m2_br_srv_wiki_db_user}') (тот же, что и на шаге 1)" "$m2_br_srv_wiki_db_pass_def" "wiki_db_pass_pmt_val"
 
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ТРЕБУЕТСЯ РУЧНОЕ ДЕЙСТВИЕ: Веб-установка MediaWiki${C_RESET}"
-    log_msg "${P_ACTION}   URL для доступа: ${C_CYAN}http://${brsrv_lan_ip_for_url_val}:${wiki_ext_port_on_brsrv_val}/${C_RESET}"
+    log_msg "${P_ACTION}   URL для доступа: ${C_CYAN}http://${br_srv_lan_ip_for_url_val}:${wiki_ext_port_on_br_srv_val}/${C_RESET}"
     log_msg "${P_ACTION}   ${C_DIM}(Убедитесь, что DNAT на BR_RTR настроен на этот IP и порт BR_SRV)${C_RESET}"
     log_msg "${P_ACTION}   ${C_BOLD_YELLOW}Основные параметры для веб-установки:${C_RESET}"
     log_msg "${P_ACTION}     - Хост базы данных: ${C_YELLOW}mariadb_wiki${C_RESET}"
@@ -511,8 +511,8 @@ setup_br_srv_m2_docker_mediawiki_inst_p2_web_setup_pmt() {
     log_msg "${P_ACTION}   1. ${C_GREEN}Завершите${C_RESET} процесс веб-установки MediaWiki в браузере."
     log_msg "${P_ACTION}   2. В конце установки MediaWiki предложит ${C_GREEN}скачать файл 'LocalSettings.php'${C_RESET}. Скачайте его."
     log_msg "${P_ACTION}   3. ${C_GREEN}Скопируйте${C_RESET} этот скачанный файл 'LocalSettings.php' на сервер ${C_BOLD_MAGENTA}BR_SRV${C_RESET}"
-    log_msg "${P_ACTION}      в директорию: ${C_CYAN}${m2_br_srv_wiki_localsettings_pth_on_brsrv%/*}/${C_RESET}"
-    log_msg "${P_ACTION}      Под именем: ${C_CYAN}$(basename "$m2_br_srv_wiki_localsettings_pth_on_brsrv")${C_RESET}"
+    log_msg "${P_ACTION}      в директорию: ${C_CYAN}${m2_br_srv_wiki_localsettings_pth_on_br_srv%/*}/${C_RESET}"
+    log_msg "${P_ACTION}      Под именем: ${C_CYAN}$(basename "$m2_br_srv_wiki_localsettings_pth_on_br_srv")${C_RESET}"
     log_msg "${P_ACTION}   4. ${C_GREEN}Вернитесь${C_RESET} в этот терминал и продолжите выполнение скрипта."
     
     touch "$flag_manual_web_wiki_pending_val"
@@ -527,7 +527,7 @@ setup_br_srv_m2_docker_mediawiki_inst_p3_apply_localsettings() {
     
     log_msg "${P_ACTION} Применение LocalSettings.php для MediaWiki (Часть 3) на BR_SRV..."
     
-    local localsettings_target_pth_val="$m2_br_srv_wiki_localsettings_pth_on_brsrv"
+    local localsettings_target_pth_val="$m2_br_srv_wiki_localsettings_pth_on_br_srv"
     local docker_compose_pth_val="$m2_br_srv_docker_compose_pth"
     local docker_compose_cmd_val; docker_compose_cmd_val=$(get_docker_compose_cmd)
 

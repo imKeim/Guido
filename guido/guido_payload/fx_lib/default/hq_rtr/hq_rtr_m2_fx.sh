@@ -145,15 +145,15 @@ setup_hq_rtr_m2_dnat_ssh_to_hq_srv() {
     fi
 
     local dnat_ext_port_val; ask_val_param "Внешний порт на HQ_RTR для DNAT SSH на HQ_SRV" "$m2_dnat_hq_rtr_to_hq_srv_ssh_port_var" "is_port_valid" "dnat_ext_port_val"
-    local hqsrv_int_ip_val; hqsrv_int_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
-    local hqsrv_int_ssh_port_val="$DEF_SSH_PORT"
+    local hq_srv_int_ip_val; hq_srv_int_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hq_srv_int_ssh_port_val="$DEF_SSH_PORT"
     
     local dnat_listen_iface_val; ask_param "Интерфейс HQ_RTR для приема DNAT-трафика (например, WAN или LAN Trunk)" "$m1_hq_rtr_wan_iface" "dnat_listen_iface_val"
 
-    if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ext_port_val" -j DNAT --to-destination "${hqsrv_int_ip_val}:${hqsrv_int_ssh_port_val}" &>/dev/null; then
-        iptables -t nat -A PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ext_port_val" -j DNAT --to-destination "${hqsrv_int_ip_val}:${hqsrv_int_ssh_port_val}"
-        log_msg "${P_OK} Правило DNAT для SSH на HQ_SRV (порт ${C_CYAN}$dnat_ext_port_val${C_GREEN} -> ${hqsrv_int_ip_val}:${hqsrv_int_ssh_port_val}) добавлено."
-        reg_sneaky_cmd "iptables -t nat -A PREROUTING -i $dnat_listen_iface_val -p tcp --dport $dnat_ext_port_val -j DNAT --to ${hqsrv_int_ip_val}:${hqsrv_int_ssh_port_val}"
+    if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ext_port_val" -j DNAT --to-destination "${hq_srv_int_ip_val}:${hq_srv_int_ssh_port_val}" &>/dev/null; then
+        iptables -t nat -A PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_ext_port_val" -j DNAT --to-destination "${hq_srv_int_ip_val}:${hq_srv_int_ssh_port_val}"
+        log_msg "${P_OK} Правило DNAT для SSH на HQ_SRV (порт ${C_CYAN}$dnat_ext_port_val${C_GREEN} -> ${hq_srv_int_ip_val}:${hq_srv_int_ssh_port_val}) добавлено."
+        reg_sneaky_cmd "iptables -t nat -A PREROUTING -i $dnat_listen_iface_val -p tcp --dport $dnat_ext_port_val -j DNAT --to ${hq_srv_int_ip_val}:${hq_srv_int_ssh_port_val}"
     else
         log_msg "${P_INFO} Правило DNAT для SSH на HQ_SRV (порт ${C_CYAN}$dnat_ext_port_val${C_RESET}) уже существует."
     fi

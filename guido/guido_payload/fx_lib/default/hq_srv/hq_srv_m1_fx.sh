@@ -184,22 +184,22 @@ setup_hq_srv_m1_dns_srv() {
 
     local lan_iface_for_dns_val="$m1_hq_srv_lan_iface"
     local listen_addr_def_val; listen_addr_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
-    local hqrtr_vlan_srv_ip_def_val; hqrtr_vlan_srv_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_srv_ip")
-    local hqrtr_vlan_cli_ip_def_val; hqrtr_vlan_cli_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_cli_ip")
-    local hqrtr_vlan_mgmt_ip_def_val; hqrtr_vlan_mgmt_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_mgmt_ip_def")
-    local hqcli_ip_def_val="$m1_hq_cli_dhcp_reserved_ip_def"
-    local brrtr_lan_ip_def_val; brrtr_lan_ip_def_val=$(get_ip_only "$m1_br_rtr_lan_ip")
-    local brsrv_lan_ip_def_val; brsrv_lan_ip_def_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local hq_rtr_vlan_srv_ip_def_val; hq_rtr_vlan_srv_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_srv_ip")
+    local hq_rtr_vlan_cli_ip_def_val; hq_rtr_vlan_cli_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_cli_ip")
+    local hq_rtr_vlan_mgmt_ip_def_val; hq_rtr_vlan_mgmt_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_mgmt_ip_def")
+    local hq_cli_ip_def_val="$m1_hq_cli_dhcp_reserved_ip_def"
+    local br_rtr_lan_ip_def_val; br_rtr_lan_ip_def_val=$(get_ip_only "$m1_br_rtr_lan_ip")
+    local br_srv_lan_ip_def_val; br_srv_lan_ip_def_val=$(get_ip_only "$m1_br_srv_lan_ip")
     local cname_moodle_target_val="$m1_hq_srv_dns_cname_moodle"
     local cname_wiki_target_val="$m1_hq_srv_dns_cname_wiki"
 
     local listen_addr_val; ask_val_param "IP-адрес для прослушивания DNS (IP HQ_SRV)" "$listen_addr_def_val" "is_ipcidr_valid" "listen_addr_val"; listen_addr_val=$(get_ip_only "$listen_addr_val")
-    local hqrtr_vlan_srv_ip_val; ask_val_param "IP HQ_RTR (VLAN SRV)" "$hqrtr_vlan_srv_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_srv_ip_val"; hqrtr_vlan_srv_ip_val=$(get_ip_only "$hqrtr_vlan_srv_ip_val")
-    local hqrtr_vlan_cli_ip_val; ask_val_param "IP HQ_RTR (VLAN CLI)" "$hqrtr_vlan_cli_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_cli_ip_val"; hqrtr_vlan_cli_ip_val=$(get_ip_only "$hqrtr_vlan_cli_ip_val")
-    local hqrtr_vlan_mgmt_ip_val; ask_val_param "IP HQ_RTR (VLAN MGMT)" "$hqrtr_vlan_mgmt_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_mgmt_ip_val"; hqrtr_vlan_mgmt_ip_val=$(get_ip_only "$hqrtr_vlan_mgmt_ip_val")
-    local hqcli_ip_val; ask_val_param "IP HQ_CLI" "$hqcli_ip_def_val" "is_ipcidr_valid" "hqcli_ip_val"; hqcli_ip_val=$(get_ip_only "$hqcli_ip_val")
-    local brrtr_lan_ip_val; ask_val_param "IP BR_RTR (LAN)" "$brrtr_lan_ip_def_val" "is_ipcidr_valid" "brrtr_lan_ip_val"; brrtr_lan_ip_val=$(get_ip_only "$brrtr_lan_ip_val")
-    local brsrv_lan_ip_val; ask_val_param "IP BR_SRV (LAN)" "$brsrv_lan_ip_def_val" "is_ipcidr_valid" "brsrv_lan_ip_val"; brsrv_lan_ip_val=$(get_ip_only "$brsrv_lan_ip_val")
+    local hq_rtr_vlan_srv_ip_val; ask_val_param "IP HQ_RTR (VLAN SRV)" "$hq_rtr_vlan_srv_ip_def_val" "is_ipcidr_valid" "hq_rtr_vlan_srv_ip_val"; hq_rtr_vlan_srv_ip_val=$(get_ip_only "$hq_rtr_vlan_srv_ip_val")
+    local hq_rtr_vlan_cli_ip_val; ask_val_param "IP HQ_RTR (VLAN CLI)" "$hq_rtr_vlan_cli_ip_def_val" "is_ipcidr_valid" "hq_rtr_vlan_cli_ip_val"; hq_rtr_vlan_cli_ip_val=$(get_ip_only "$hq_rtr_vlan_cli_ip_val")
+    local hq_rtr_vlan_mgmt_ip_val; ask_val_param "IP HQ_RTR (VLAN MGMT)" "$hq_rtr_vlan_mgmt_ip_def_val" "is_ipcidr_valid" "hq_rtr_vlan_mgmt_ip_val"; hq_rtr_vlan_mgmt_ip_val=$(get_ip_only "$hq_rtr_vlan_mgmt_ip_val")
+    local hq_cli_ip_val; ask_val_param "IP HQ_CLI" "$hq_cli_ip_def_val" "is_ipcidr_valid" "hq_cli_ip_val"; hq_cli_ip_val=$(get_ip_only "$hq_cli_ip_val")
+    local br_rtr_lan_ip_val; ask_val_param "IP BR_RTR (LAN)" "$br_rtr_lan_ip_def_val" "is_ipcidr_valid" "br_rtr_lan_ip_val"; br_rtr_lan_ip_val=$(get_ip_only "$br_rtr_lan_ip_val")
+    local br_srv_lan_ip_val; ask_val_param "IP BR_SRV (LAN)" "$br_srv_lan_ip_def_val" "is_ipcidr_valid" "br_srv_lan_ip_val"; br_srv_lan_ip_val=$(get_ip_only "$br_srv_lan_ip_val")
 
     cp /etc/dnsmasq.conf "/etc/dnsmasq.conf.bak.$(date +%F_%T)" 2>/dev/null || true
     cat <<EOF > /etc/dnsmasq.conf
@@ -212,13 +212,13 @@ no-hosts
 cache-size=1000
 server=${DEF_DNS_PRIMARY}
 server=${DEF_DNS_SECONDARY}
-host-record=hq-rtr.${DOM_NAME},${hqrtr_vlan_srv_ip_val}
-host-record=hq-rtr.${DOM_NAME},${hqrtr_vlan_cli_ip_val}
-host-record=hq-rtr.${DOM_NAME},${hqrtr_vlan_mgmt_ip_val}
+host-record=hq-rtr.${DOM_NAME},${hq_rtr_vlan_srv_ip_val}
+host-record=hq-rtr.${DOM_NAME},${hq_rtr_vlan_cli_ip_val}
+host-record=hq-rtr.${DOM_NAME},${hq_rtr_vlan_mgmt_ip_val}
 host-record=hq-srv.${DOM_NAME},${listen_addr_val}
-host-record=hq-cli.${DOM_NAME},${hqcli_ip_val}
-address=/br-rtr.${DOM_NAME}/${brrtr_lan_ip_val}
-address=/br-srv.${DOM_NAME}/${brsrv_lan_ip_val}
+host-record=hq-cli.${DOM_NAME},${hq_cli_ip_val}
+address=/br-rtr.${DOM_NAME}/${br_rtr_lan_ip_val}
+address=/br-srv.${DOM_NAME}/${br_srv_lan_ip_val}
 cname=${cname_moodle_target_val},hq-rtr.${DOM_NAME}
 cname=${cname_wiki_target_val},hq-rtr.${DOM_NAME}
 EOF

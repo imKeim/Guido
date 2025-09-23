@@ -13,11 +13,11 @@
 # Параметры: $1:Имя функции-шага, $2:Код роли, $3:Номер модуля, $4:Описание шага.
 _run_step() {
     local step_fx_name="$1"
-    local vm_role_code_uc="$2" # Роль в верхнем регистре (HQSRV, ISP)
+    local vm_role_code_uc="$2" # Роль в верхнем регистре (HQ_SRV, ISP)
     local mod_num="$3"
     local step_desc_str="$4"
 
-    local vm_role_code_lc; vm_role_code_lc=$(echo "$vm_role_code_uc" | tr '[:upper:]' '[:lower:]') # Роль в нижнем регистре (hqsrv, isp)
+    local vm_role_code_lc; vm_role_code_lc=$(echo "$vm_role_code_uc" | tr '[:upper:]' '[:lower:]') # Роль в нижнем регистре (hq_srv, isp)
 
     # Путь к файлу с функциями для текущей роли и модуля в рамках текущего сценария
     local fx_file_to_source="${FX_LIB_DIR}/${g_cur_de_scenario_name}/${vm_role_code_lc}/${vm_role_code_lc}_m${mod_num}_fx.sh"
@@ -152,8 +152,8 @@ run_guido_mod() {
             -e 's/Ntp Srv/NTP Server/g' \
             -e 's/Ntp Cli/NTP Client/g' \
             -e 's/Nginx Reverse Proxy/Nginx Reverse Proxy/g' \
-            -e 's/Dnat Ssh To Hqsrv/DNAT SSH to HQSRV/g' \
-            -e 's/Dnat Wiki Ssh To Brsrv/DNAT Wiki & SSH to BRSRV/g' \
+            -e 's/Dnat Ssh To Hq_Srv/DNAT SSH to HQ_SRV/g' \
+            -e 's/Dnat Wiki Ssh To_Br Srv/DNAT Wiki & SSH to BR_SRV/g' \
             -e 's/Ssh Srv Port Update/SSH Server Port Update/g' \
             -e 's/Ssh Srv En/SSH Server Enable/g' \
             -e 's/Ssh Srv/SSH Server/g' \
@@ -179,7 +179,7 @@ run_guido_mod() {
             -e 's/Sudo For Domain Group/Sudo for Domain Group/g' \
             -e 's/Nfs Cli Mount/NFS Client Mount/g' \
             -e 's/Wait Yabrowser Inst/Wait Yandex Browser Install/g' \
-            -e 's/Copy Localsettings To Brsrv Pmt/Copy LocalSettings.php to BRSRV Prompt/g' \
+            -e 's/Copy Localsettings To Br_Srv Pmt/Copy LocalSettings.php to BR_SRV Prompt/g' \
         )
 
 
@@ -316,8 +316,8 @@ run_manual_mod() {
                 -e 's/Ntp Srv/NTP Server/g' \
                 -e 's/Ntp Cli/NTP Client/g' \
                 -e 's/Nginx Reverse Proxy/Nginx Reverse Proxy/g' \
-                -e 's/Dnat Ssh To Hqsrv/DNAT SSH to HQSRV/g' \
-                -e 's/Dnat Wiki Ssh To Brsrv/DNAT Wiki & SSH to BRSRV/g' \
+                -e 's/Dnat Ssh To Hq_Srv/DNAT SSH to HQ_SRV/g' \
+                -e 's/Dnat Wiki Ssh To Br_Srv/DNAT Wiki & SSH to BR_SRV/g' \
                 -e 's/Ssh Srv Port Update/SSH Server Port Update/g' \
                 -e 's/Ssh Srv En/SSH Server Enable/g' \
                 -e 's/Ssh Srv/SSH Server/g' \
@@ -343,7 +343,7 @@ run_manual_mod() {
                 -e 's/Sudo For Domain Group/Sudo for Domain Group/g' \
                 -e 's/Nfs Cli Mount/NFS Client Mount/g' \
                 -e 's/Wait Yabrowser Inst/Wait Yandex Browser Install/g' \
-                -e 's/Copy Localsettings To Brsrv Pmt/Copy LocalSettings.php to BRSRV Prompt/g' \
+                -e 's/Copy Localsettings To Br_Srv Pmt/Copy LocalSettings.php to BR_SRV Prompt/g' \
             )
 
             local step_status_sym_manual_val="${C_DIM}[ ]${C_RESET}"
@@ -406,8 +406,8 @@ run_manual_mod() {
                 -e 's/Ntp Srv/NTP Server/g' \
                 -e 's/Ntp Cli/NTP Client/g' \
                 -e 's/Nginx Reverse Proxy/Nginx Reverse Proxy/g' \
-                -e 's/Dnat Ssh To Hqsrv/DNAT SSH to HQSRV/g' \
-                -e 's/Dnat Wiki Ssh To Brsrv/DNAT Wiki & SSH to BRSRV/g' \
+                -e 's/Dnat Ssh To Hq_Srv/DNAT SSH to HQ_SRV/g' \
+                -e 's/Dnat Wiki Ssh To Br_Srv/DNAT Wiki & SSH to BR_SRV/g' \
                 -e 's/Ssh Srv Port Update/SSH Server Port Update/g' \
                 -e 's/Ssh Srv En/SSH Server Enable/g' \
                 -e 's/Ssh Srv/SSH Server/g' \
@@ -433,7 +433,7 @@ run_manual_mod() {
                 -e 's/Sudo For Domain Group/Sudo for Domain Group/g' \
                 -e 's/Nfs Cli Mount/NFS Client Mount/g' \
                 -e 's/Wait Yabrowser Inst/Wait Yandex Browser Install/g' \
-                -e 's/Copy Localsettings To Brsrv Pmt/Copy LocalSettings.php to BRSRV Prompt/g' \
+                -e 's/Copy Localsettings To Br_Srv Pmt/Copy LocalSettings.php to BR_SRV Prompt/g' \
             )
 
 

@@ -168,7 +168,7 @@ declare -ag SCN_HQ_CLI_M2=(
     "setup_hq_cli_m2_sudo_for_domain_group"
     "setup_hq_cli_m2_nfs_cli_mount"
     "setup_hq_cli_m2_wait_yabrowser_inst"
-    "setup_hq_cli_m2_copy_localsettings_to_brsrv_pmt"
+    "setup_hq_cli_m2_copy_localsettings_to_br_srv_pmt"
 )
 
 # --- Мета-комментарий: Конец определений сценариев для "default" ---

@@ -348,7 +348,7 @@ setup_hq_srv_m2_moodle_inst_p2_web_setup_pmt() {
     local vm_role_code="HQ_SRV"; local mod_num_val="2"
     local flag_manual_web_setup_pending_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_pending_manual.flag"
     
-    local hqsrv_ip_for_url_val; hqsrv_ip_for_url_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hq_srv_ip_for_url_val; hq_srv_ip_for_url_val=$(get_ip_only "$m1_hq_srv_lan_ip")
     local moodle_db_name_pmt_val="$m2_hq_srv_moodle_db_name"
     local moodle_db_user_pmt_val="$m2_hq_srv_moodle_db_user"
     local moodle_db_pass_pmt_val; ask_param "Пароль пользователя БД Moodle ('${moodle_db_user_pmt_val}') (тот же, что и на шаге 1)" "$m2_hq_srv_moodle_db_pass_def" "moodle_db_pass_pmt_val"
@@ -357,10 +357,10 @@ setup_hq_srv_m2_moodle_inst_p2_web_setup_pmt() {
     local moodle_admin_pass_pmt_val="$m2_hq_srv_moodle_admin_pass_def"
 
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ТРЕБУЕТСЯ РУЧНОЕ ДЕЙСТВИЕ: Веб-установка Moodle${C_RESET}"
-    log_msg "${P_ACTION}   Откройте в браузере URL: ${C_CYAN}http://${hqsrv_ip_for_url_val}/${C_RESET}"
+    log_msg "${P_ACTION}   Откройте в браузере URL: ${C_CYAN}http://${hq_srv_ip_for_url_val}/${C_RESET}"
     log_msg "${P_ACTION}   Следуйте инструкциям на экране. Основные параметры:"
     log_msg "${P_ACTION}     - Язык: ${C_YELLOW}ru (Русский)${C_RESET}"
-    log_msg "${P_ACTION}     - Веб-адрес: ${C_YELLOW}http://${hqsrv_ip_for_url_val}${C_RESET}"
+    log_msg "${P_ACTION}     - Веб-адрес: ${C_YELLOW}http://${hq_srv_ip_for_url_val}${C_RESET}"
     log_msg "${P_ACTION}     - Каталог Moodle: ${C_YELLOW}/var/www/html${C_RESET}"
     log_msg "${P_ACTION}     - Каталог данных: ${C_YELLOW}/var/www/moodledata${C_RESET}"
     log_msg "${P_ACTION}     - Драйвер базы данных: ${C_YELLOW}MariaDB (native/mysqli)${C_RESET}"

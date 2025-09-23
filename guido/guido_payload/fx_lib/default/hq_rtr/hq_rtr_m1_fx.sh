@@ -327,22 +327,22 @@ setup_hq_rtr_m1_tz() {
 setup_hq_rtr_m1_dns_cli_final() {
     log_msg "${P_ACTION} Финальная настройка DNS-клиента для HQ_RTR..."
     local vlan_srv_id_for_dns_val="$m1_hq_rtr_vlan_srv_id"
-    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
-    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
-    hqsrv_dns_ip_val=$(get_ip_only "$hqsrv_dns_ip_val")
+    local hq_srv_dns_ip_def_val; hq_srv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hq_srv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hq_srv_dns_ip_def_val" "is_ipcidr_valid" "hq_srv_dns_ip_val"
+    hq_srv_dns_ip_val=$(get_ip_only "$hq_srv_dns_ip_val")
     
     local wan_iface_to_deny_dns_val="$m1_hq_rtr_wan_iface"
 
     mkdir -p "/etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}"
     if ! cat <<EOF > "/etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}/resolv.conf"
 search ${DOM_NAME}
-nameserver ${hqsrv_dns_ip_val}
+nameserver ${hq_srv_dns_ip_val}
 EOF
     then
         log_msg "${P_ERROR} Ошибка создания resolv.conf для интерфейса ${C_BOLD_RED}vlan${vlan_srv_id_for_dns_val}${P_ERROR}."; return 1
     fi
-    log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}vlan${vlan_srv_id_for_dns_val}${C_GREEN} настроен (DNS: $hqsrv_dns_ip_val)."
-    reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hqsrv_dns_ip_val}' > /etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}/resolv.conf"
+    log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}vlan${vlan_srv_id_for_dns_val}${C_GREEN} настроен (DNS: $hq_srv_dns_ip_val)."
+    reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hq_srv_dns_ip_val}' > /etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}/resolv.conf"
 
     set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на HQ_RTR"
     set_cfg_val "/etc/resolvconf.conf" "deny_interfaces" "\"${wan_iface_to_deny_dns_val} lo.dnsmasq\"" "# Запретить обновление DNS с WAN и локального dnsmasq (если он был)"
@@ -375,8 +375,8 @@ setup_hq_rtr_m1_dhcp_srv() {
     local range_start_def_val="$m1_hq_rtr_dhcp_range_start_def"
     local range_end_def_val="$m1_hq_rtr_dhcp_range_end_def"
     local range_mask_def_val="$m1_hq_rtr_dhcp_subnet_mask_def"
-    local hqcli_cli_id_def_val="$m1_hq_cli_dhcp_cli_id_def"
-    local hqcli_reserved_ip_def_val="$m1_hq_cli_dhcp_reserved_ip_def"
+    local hq_cli_cli_id_def_val="$m1_hq_cli_dhcp_cli_id_def"
+    local hq_cli_reserved_ip_def_val="$m1_hq_cli_dhcp_reserved_ip_def"
     local dns_srv_for_cli_def_val; dns_srv_for_cli_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
 
     local listen_addr_val; ask_val_param "IP-адрес для прослушивания DHCP (IP HQ_RTR в VLAN ${vlan_cli_id_for_dhcp_val})" "$listen_addr_def_val" "is_ipcidr_valid" "listen_addr_val"
@@ -384,20 +384,20 @@ setup_hq_rtr_m1_dhcp_srv() {
     local range_start_val; ask_val_param "Начальный IP-адрес DHCP-диапазона" "$range_start_def_val" "is_ipcidr_valid" "range_start_val"; range_start_val=$(get_ip_only "$range_start_val")
     local range_end_val; ask_val_param "Конечный IP-адрес DHCP-диапазона" "$range_end_def_val" "is_ipcidr_valid" "range_end_val"; range_end_val=$(get_ip_only "$range_end_val")
     local range_mask_val; ask_param "Маска подсети для DHCP-диапазона" "$range_mask_def_val" "range_mask_val"
-    local hqcli_cli_id_val; ask_param "Client ID для резервации IP HQCLI" "$hqcli_cli_id_def_val" "hqcli_cli_id_val"
-    local hqcli_reserved_ip_val; ask_val_param "Резервируемый IP-адрес для HQCLI" "$hqcli_reserved_ip_def_val" "is_ipcidr_valid" "hqcli_reserved_ip_val"; hqcli_reserved_ip_val=$(get_ip_only "$hqcli_reserved_ip_val")
-    local dns_srv_for_cli_val; ask_val_param "IP DNS-сервера для DHCP-клиентов (HQSRV)" "$dns_srv_for_cli_def_val" "is_ipcidr_valid" "dns_srv_for_cli_val"; dns_srv_for_cli_val=$(get_ip_only "$dns_srv_for_cli_val")
+    local hq_cli_cli_id_val; ask_param "Client ID для резервации IP HQ_CLI" "$hq_cli_cli_id_def_val" "hq_cli_cli_id_val"
+    local hq_cli_reserved_ip_val; ask_val_param "Резервируемый IP-адрес для HQ_CLI" "$hq_cli_reserved_ip_def_val" "is_ipcidr_valid" "hq_cli_reserved_ip_val"; hq_cli_reserved_ip_val=$(get_ip_only "$hq_cli_reserved_ip_val")
+    local dns_srv_for_cli_val; ask_val_param "IP DNS-сервера для DHCP-клиентов (HQ_SRV)" "$dns_srv_for_cli_def_val" "is_ipcidr_valid" "dns_srv_for_cli_val"; dns_srv_for_cli_val=$(get_ip_only "$dns_srv_for_cli_val")
 
     cp /etc/dnsmasq.conf "/etc/dnsmasq.conf.bak.$(date +%F_%T)" 2>/dev/null || true
     cat <<EOF > /etc/dnsmasq.conf
-# Конфигурация DHCP-сервера dnsmasq для HQRTR
+# Конфигурация DHCP-сервера dnsmasq для HQ_RTR
 interface=vlan${vlan_cli_id_for_dhcp_val}
 listen-address=${listen_addr_val}
 port=0
 no-resolv
 dhcp-authoritative
 dhcp-range=interface:vlan${vlan_cli_id_for_dhcp_val},${range_start_val},${range_end_val},${range_mask_val},6h
-dhcp-host=id:${hqcli_cli_id_val},hq-cli,${hqcli_reserved_ip_val},infinite
+dhcp-host=id:${hq_cli_cli_id_val},hq-cli,${hq_cli_reserved_ip_val},infinite
 dhcp-option=6,${dns_srv_for_cli_val}
 dhcp-option=15,${DOM_NAME}
 EOF
@@ -415,19 +415,19 @@ EOF
     fi
 }
 
-# Функция: setup_hqrtr_m1_ospf
-setup_hqrtr_m1_ospf() {
-    log_msg "${P_ACTION} Настройка OSPF-маршрутизации (FRR) на HQRTR..."
+# Функция: setup_hq_rtr_m1_ospf
+setup_hq_rtr_m1_ospf() {
+    log_msg "${P_ACTION} Настройка OSPF-маршрутизации (FRR) на HQ_RTR..."
     if ! ensure_pkgs "vtysh" "frr"; then
         log_msg "${P_ERROR} Пакет FRR (frr) не установлен и не может быть установлен."
         return 1
     fi
 
-    local gre_iface_for_ospf_val="$m1_hqrtr_gre_iface"
-    local vlan_srv_id_for_ospf_val="$m1_hqrtr_vlan_srv_id"
-    local vlan_cli_id_for_ospf_val="$m1_hqrtr_vlan_cli_id"
-    local vlan_mgmt_id_def_for_ospf_val="$m1_hqrtr_vlan_mgmt_id_def"
-    local router_id_def_val; router_id_def_val=$(get_ip_only "$m1_hqrtr_gre_tunnel_ip")
+    local gre_iface_for_ospf_val="$m1_hq_rtr_gre_iface"
+    local vlan_srv_id_for_ospf_val="$m1_hq_rtr_vlan_srv_id"
+    local vlan_cli_id_for_ospf_val="$m1_hq_rtr_vlan_cli_id"
+    local vlan_mgmt_id_def_for_ospf_val="$m1_hq_rtr_vlan_mgmt_id_def"
+    local router_id_def_val; router_id_def_val=$(get_ip_only "$m1_hq_rtr_gre_tunnel_ip")
     local ospf_auth_key_def_val="$m1_ospf_auth_key_def"
 
     local vlan_mgmt_id_for_ospf_val; ask_val_param "VLAN ID сети Управления для OSPF" "$vlan_mgmt_id_def_for_ospf_val" "is_vlan_valid" "vlan_mgmt_id_for_ospf_val"
@@ -444,7 +444,7 @@ setup_hqrtr_m1_ospf() {
 
     cat <<EOF > /etc/frr/frr.conf
 !
-! FRRouting configuration file for HQRTR
+! FRRouting configuration file for HQ_RTR
 !
 hostname $(hostname -f)
 log file /var/log/frr/frr.log debugging
@@ -452,7 +452,7 @@ log file /var/log/frr/frr.log debugging
 ! OSPF Configuration
 !
 interface ${gre_iface_for_ospf_val}
- description GRE Tunnel to Branch Router (BRRTR)
+ description GRE Tunnel to Branch Router (BR_RTR)
  ip ospf area 0.0.0.0
  ip ospf authentication message-digest
  ip ospf message-digest-key 1 md5 ${ospf_auth_key_frr_fmt_val}
@@ -498,4 +498,4 @@ EOF
     fi
 }
 
-# --- Мета-комментарий: Конец функций-шагов для HQRTR - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Конец функций-шагов для HQ_RTR - Модуль 1 (Сценарий: default) ---
