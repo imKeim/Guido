@@ -29,7 +29,7 @@ m1_hq_rtr_vlan_cli_ip="192.168.2.1/28"             # IP-адрес HQ_RTR в VLA
 m1_hq_rtr_vlan_mgmt_id_def="999"                   # VLAN ID для сети управления по умолчанию.
 m1_hq_rtr_vlan_mgmt_ip_def="192.168.99.1/29"       # IP-адрес HQ_RTR в VLAN управления.
 m1_hq_rtr_gre_iface="gre1"                         # Имя GRE-интерфейса на HQ_RTR.
-m1_hq_rtr_gre_remote_ip_var="172.16.5.5"           # Удаленный IP для GRE-туннеля (WAN IP BR_RTR).
+m1_hq_rtr_gre_remote_ip="172.16.5.5"           # Удаленный IP для GRE-туннеля (WAN IP BR_RTR).
 m1_hq_rtr_gre_tunnel_ip="192.168.5.1/30"           # IP-адрес GRE-туннеля на HQ_RTR.
 m1_hq_rtr_dhcp_range_start_def="192.168.2.2"       # Начальный IP DHCP-диапазона на HQ_RTR.
 m1_hq_rtr_dhcp_range_end_def="192.168.2.14"        # Конечный IP DHCP-диапазона на HQ_RTR.
@@ -42,7 +42,7 @@ m1_br_rtr_wan_gw="172.16.5.1"                      # Шлюз WAN BR_RTR.
 m1_br_rtr_lan_iface="ens19"                        # LAN-интерфейс BR_RTR.
 m1_br_rtr_lan_ip="192.168.3.1/27"                  # IP-адрес LAN BR_RTR.
 m1_br_rtr_gre_iface="gre1"                         # Имя GRE-интерфейса на BR_RTR.
-m1_br_rtr_gre_remote_ip_var="172.16.4.4"           # Удаленный IP для GRE-туннеля (WAN IP HQ_RTR).
+m1_br_rtr_gre_remote_ip="172.16.4.4"           # Удаленный IP для GRE-туннеля (WAN IP HQ_RTR).
 m1_br_rtr_gre_tunnel_ip="192.168.5.2/30"           # IP-адрес GRE-туннеля на BR_RTR.
 
 # --- HQ-SRV - Модуль 1 ---
@@ -69,9 +69,9 @@ m1_hq_cli_dhcp_reserved_ip_def="192.168.2.10"      # Резервируемый 
 # --- HQ-RTR - Модуль 2 ---
 m2_nginx_moodle_backend_port="80"                 # Порт бэкенда Moodle на HQ_SRV.
 m2_nginx_wiki_backend_port_def="8080"             # Порт бэкенда Wiki на BR_SRV по умолчанию.
-m2_dnat_hq_rtr_to_hq_srv_ssh_port_var="$DEF_SSH_PORT" # Порт для DNAT SSH на HQ_SRV (использует DEF_SSH_PORT).
+m2_dnat_hq_rtr_to_hq_srv_ssh_port="$DEF_SSH_PORT" # Порт для DNAT SSH на HQ_SRV (использует DEF_SSH_PORT).
 m2_dnat_br_rtr_to_br_srv_wiki_ext_port_def="80"     # Внешний порт для DNAT Wiki на BR_SRV.
-m2_dnat_br_rtr_to_br_srv_ssh_port_var="$DEF_SSH_PORT" # Порт для DNAT SSH на BR_SRV.
+m2_dnat_br_rtr_to_br_srv_ssh_port="$DEF_SSH_PORT" # Порт для DNAT SSH на BR_SRV.
 
 # --- HQ-SRV - Модуль 2 ---
 m2_hq_srv_raid_level_def="5"                       # Уровень RAID по умолчанию для HQ_SRV.
@@ -104,7 +104,7 @@ m2_br_srv_docker_wiki_imagesvolume_name="images"   # Имя Docker-volume для
 m2_br_srv_docker_compose_pth="/home/sshuser/wiki.yml" # Путь к файлу docker-compose для MediaWiki.
 m2_br_srv_wiki_db_user="wiki"                      # Пользователь БД MediaWiki.
 m2_br_srv_wiki_db_pass_def='WikiP@ssword'          # Пароль пользователя БД MediaWiki по умолчанию.
-m2_br_srv_wiki_localsettings_pth_on_brsrv="/home/sshuser/LocalSettings.php" # Путь к LocalSettings.php на BR_SRV.
+m2_br_srv_wiki_localsettings_pth_on_br_srv="/home/sshuser/LocalSettings.php" # Путь к LocalSettings.php на BR_SRV.
 m2_wiki_site_name="Моя Вики ДЭ"                   # Название сайта MediaWiki.
 m2_wiki_admin_user="WikiAdminDE"                  # Имя администратора MediaWiki.
 

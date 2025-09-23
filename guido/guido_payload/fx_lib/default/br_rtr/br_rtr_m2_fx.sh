@@ -60,7 +60,7 @@ setup_br_rtr_m2_dnat_wiki_ssh_to_br_srv() {
     local wiki_int_port_def_val="$m2_nginx_wiki_backend_port_def"
     local wiki_int_port_val; ask_val_param "Внутренний порт MediaWiki на BR_SRV" "$wiki_int_port_def_val" "is_port_valid" "wiki_int_port_val"
 
-    local dnat_ssh_port_on_br_rtr_val; ask_val_param "Порт на BR_RTR для DNAT SSH на BR_SRV" "$m2_dnat_br_rtr_to_br_srv_ssh_port_var" "is_port_valid" "dnat_ssh_port_on_br_rtr_val"
+    local dnat_ssh_port_on_br_rtr_val; ask_val_param "Порт на BR_RTR для DNAT SSH на BR_SRV" "$m2_dnat_br_rtr_to_br_srv_ssh_port" "is_port_valid" "dnat_ssh_port_on_br_rtr_val"
     local br_srv_int_ssh_port_val="$DEF_SSH_PORT"
 
     if ! iptables -t nat -C PREROUTING -i "$dnat_listen_iface_val" -p tcp --dport "$dnat_wiki_ext_port_val" -j DNAT --to-destination "${br_srv_int_ip_val}:${wiki_int_port_val}" &>/dev/null; then

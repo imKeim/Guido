@@ -188,7 +188,7 @@ setup_br_rtr_m1_gre_tunnel() {
     local tunnel_local_ip_val; ask_val_param "Локальный IP для туннеля (WAN IP BR_RTR)" "$def_tunnel_local_ip_val" "is_ipcidr_valid" "tunnel_local_ip_val"
     tunnel_local_ip_val=$(get_ip_only "$tunnel_local_ip_val")
 
-    local tunnel_remote_ip_val; ask_val_param "Удаленный IP для туннеля (WAN IP HQ_RTR)" "$m1_br_rtr_gre_remote_ip_var" "is_ipcidr_valid" "tunnel_remote_ip_val"
+    local tunnel_remote_ip_val; ask_val_param "Удаленный IP для туннеля (WAN IP HQ_RTR)" "$m1_br_rtr_gre_remote_ip" "is_ipcidr_valid" "tunnel_remote_ip_val"
     tunnel_remote_ip_val=$(get_ip_only "$tunnel_remote_ip_val")
 
     log_msg "${P_ACTION} Настройка GRE туннеля ${C_CYAN}${gre_iface_name_val}${C_RESET}..."

@@ -144,7 +144,7 @@ setup_hq_rtr_m2_dnat_ssh_to_hq_srv() {
         return 1
     fi
 
-    local dnat_ext_port_val; ask_val_param "Внешний порт на HQ_RTR для DNAT SSH на HQ_SRV" "$m2_dnat_hq_rtr_to_hq_srv_ssh_port_var" "is_port_valid" "dnat_ext_port_val"
+    local dnat_ext_port_val; ask_val_param "Внешний порт на HQ_RTR для DNAT SSH на HQ_SRV" "$m2_dnat_hq_rtr_to_hq_srv_ssh_port" "is_port_valid" "dnat_ext_port_val"
     local hq_srv_int_ip_val; hq_srv_int_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
     local hq_srv_int_ssh_port_val="$DEF_SSH_PORT"
     
