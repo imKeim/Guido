@@ -149,9 +149,9 @@
 ```
 .
 ├── docs/                     # Документация
-│   ├── bootstrap.md
-│   ├── how_to_prepare.md
-│   └── how_to_run.md
+│   ├── bootstrap-clean.md
+│   ├── prepare.md
+│   └── run.md
 ├── guido/
 │   ├── build_installer.sh    # Скрипт сборки установщика
 │   ├── build_output/         # Артефакты сборки (генерируется)
