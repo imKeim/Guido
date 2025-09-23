@@ -1,25 +1,25 @@
 #!/bin/bash
-# Файл: fx_lib/default/hqsrv/hqsrv_m2_fx.sh
-# Содержит функции-шаги для роли HQSRV, Модуль 2, сценарий "default".
+# Файл: fx_lib/default/hq_srv/hq_srv_m2_fx.sh
+# Содержит функции-шаги для роли HQ_SRV, Модуль 2, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для HQSRV - Модуль 2 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_SRV - Модуль 2 (Сценарий: default) ---
 
-# Функция: setup_hqsrv_m2_ntp_cli
-# Назначение: Настраивает HQSRV как NTP-клиента.
-setup_hqsrv_m2_ntp_cli() {
-    log_msg "${P_ACTION} Настройка NTP-клиента (chrony) на HQSRV..."
+# Функция: setup_hq_srv_m2_ntp_cli
+# Назначение: Настраивает HQ_SRV как NTP-клиента.
+setup_hq_srv_m2_ntp_cli() {
+    log_msg "${P_ACTION} Настройка NTP-клиента (chrony) на HQ_SRV..."
     if ! ensure_pkgs "chronyc" "chrony"; then
         log_msg "${P_ERROR} Пакет chrony не установлен."
         return 1
     fi
 
-    local ntp_srv_ip_def_val; ntp_srv_ip_def_val=$(get_ip_only "$m1_hqrtr_vlan_srv_ip")
-    local ntp_srv_ip_val; ask_val_param "IP-адрес NTP-сервера (IP HQRTR в VLAN серверов)" "$ntp_srv_ip_def_val" "is_ipcidr_valid" "ntp_srv_ip_val"
+    local ntp_srv_ip_def_val; ntp_srv_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_srv_ip")
+    local ntp_srv_ip_val; ask_val_param "IP-адрес NTP-сервера (IP HQ_RTR в VLAN серверов)" "$ntp_srv_ip_def_val" "is_ipcidr_valid" "ntp_srv_ip_val"
     ntp_srv_ip_val=$(get_ip_only "$ntp_srv_ip_val")
 
     if ! cat <<EOF > /etc/chrony.conf
-# Конфигурация NTP-клиента chrony для HQSRV
+# Конфигурация NTP-клиента chrony для HQ_SRV
 server ${ntp_srv_ip_val} iburst
 driftfile /var/lib/chrony/drift
 makestep 1.0 3
@@ -43,16 +43,16 @@ EOF
     fi
 }
 
-# Функция: setup_hqsrv_m2_ssh_srv_port_update
-# Назначение: Обновляет порт SSH-сервера на HQSRV.
-setup_hqsrv_m2_ssh_srv_port_update() {
-    log_msg "${P_ACTION} Проверка и обновление порта SSH-сервера на HQSRV..."
+# Функция: setup_hq_srv_m2_ssh_srv_port_update
+# Назначение: Обновляет порт SSH-сервера на HQ_SRV.
+setup_hq_srv_m2_ssh_srv_port_update() {
+    log_msg "${P_ACTION} Проверка и обновление порта SSH-сервера на HQ_SRV..."
     if ! command -v sshd &>/dev/null; then
         log_msg "${P_ERROR} Команда sshd не найдена. Убедитесь, что OpenSSH-server установлен."
         return 1
     fi
 
-    local target_ssh_port_val; ask_val_param "Целевой порт SSH (должен совпадать с DNAT на HQRTR)" "$DEF_SSH_PORT" "is_port_valid" "target_ssh_port_val"
+    local target_ssh_port_val; ask_val_param "Целевой порт SSH (должен совпадать с DNAT на HQ_RTR)" "$DEF_SSH_PORT" "is_port_valid" "target_ssh_port_val"
     
     local cur_ssh_port_val; cur_ssh_port_val=$(sshd -T 2>/dev/null | grep -i "^port " | awk '{print $2}' | head -n 1)
 
@@ -82,18 +82,18 @@ setup_hqsrv_m2_ssh_srv_port_update() {
     fi
 }
 
-# Функция: setup_hqsrv_m2_raid_nfs_srv
-# Назначение: Настраивает программный RAID-массив и NFS-сервер на HQSRV.
-setup_hqsrv_m2_raid_nfs_srv() {
-    log_msg "${P_ACTION} Настройка RAID и NFS-сервера на HQSRV..."
+# Функция: setup_hq_srv_m2_raid_nfs_srv
+# Назначение: Настраивает программный RAID-массив и NFS-сервер на HQ_SRV.
+setup_hq_srv_m2_raid_nfs_srv() {
+    log_msg "${P_ACTION} Настройка RAID и NFS-сервера на HQ_SRV..."
     if ! ensure_pkgs "mdadm fdisk mkfs.ext4 exportfs" "mdadm fdisk e2fsprogs nfs-utils nfs-kernel-server"; then
         log_msg "${P_ERROR} Не удалось установить необходимые пакеты для RAID и/или NFS."
         return 1
     fi
 
-    local raid_level_val; ask_val_param "Уровень RAID (например, 1, 5, 6)" "$m2_hqsrv_raid_level_def" "is_not_empty_valid" "raid_level_val"
-    local raid_dev_name_val="$m2_hqsrv_raid_dev_name"
-    local raid_disks_str_val; ask_param "Диски для RAID (через пробел, например, /dev/sdb /dev/sdc)" "$m2_hqsrv_raid_disks_def" "raid_disks_str_val"
+    local raid_level_val; ask_val_param "Уровень RAID (например, 1, 5, 6)" "$m2_hq_srv_raid_level_def" "is_not_empty_valid" "raid_level_val"
+    local raid_dev_name_val="$m2_hq_srv_raid_dev_name"
+    local raid_disks_str_val; ask_param "Диски для RAID (через пробел, например, /dev/sdb /dev/sdc)" "$m2_hq_srv_raid_disks_def" "raid_disks_str_val"
     
     local raid_disks_arr_val; read -ra raid_disks_arr_val <<< "$raid_disks_str_val"
     local num_raid_disks_val=${#raid_disks_arr_val[@]}
@@ -110,8 +110,8 @@ setup_hqsrv_m2_raid_nfs_srv() {
 
     local raid_full_dev_pth_val="/dev/${raid_dev_name_val}"
     local raid_part_dev_pth_val="${raid_full_dev_pth_val}p1"
-    local raid_mount_point_val="${m2_hqsrv_raid_mount_point_base}${raid_level_val}"
-    local nfs_export_full_pth_val="${raid_mount_point_val}/${m2_hqsrv_nfs_export_subdir}"
+    local raid_mount_point_val="${m2_hq_srv_raid_mount_point_base}${raid_level_val}"
+    local nfs_export_full_pth_val="${raid_mount_point_val}/${m2_hq_srv_nfs_export_subdir}"
 
     if mdadm --detail "$raid_full_dev_pth_val" &>/dev/null; then
         log_msg "${P_INFO} RAID-массив ${C_CYAN}$raid_full_dev_pth_val${C_RESET} уже существует."
@@ -188,7 +188,7 @@ setup_hqsrv_m2_raid_nfs_srv() {
     chown nobody:nogroup "$nfs_export_full_pth_val"
     chmod 777 "$nfs_export_full_pth_val"
     
-    local nfs_cli_net_cidr_val; nfs_cli_net_cidr_val=$(get_netaddr "$m1_hqrtr_vlan_cli_ip")
+    local nfs_cli_net_cidr_val; nfs_cli_net_cidr_val=$(get_netaddr "$m1_hq_rtr_vlan_cli_ip")
     local nfs_exports_entry_val="${nfs_export_full_pth_val} ${nfs_cli_net_cidr_val}(rw,sync,no_subtree_check,no_root_squash)"
     
     if grep -q "^${nfs_export_full_pth_val}[[:space:]]" /etc/exports; then
@@ -212,12 +212,12 @@ setup_hqsrv_m2_raid_nfs_srv() {
     fi
 }
 
-# Функция: setup_hqsrv_m2_dns_forwarding_for_ad
+# Функция: setup_hq_srv_m2_dns_forwarding_for_ad
 # Назначение: Настраивает условную пересылку DNS-запросов для домена AD.
-setup_hqsrv_m2_dns_forwarding_for_ad() {
-    log_msg "${P_ACTION} Настройка условной DNS-пересылки для домена AD на HQSRV..."
+setup_hq_srv_m2_dns_forwarding_for_ad() {
+    log_msg "${P_ACTION} Настройка условной DNS-пересылки для домена AD на HQ_SRV..."
     
-    local samba_dc_ip_val; samba_dc_ip_val=$(get_ip_only "$m1_brsrv_lan_ip")
+    local samba_dc_ip_val; samba_dc_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
     local ad_dom_dns_fwd_rule_val="server=/${DOM_NAME}/${samba_dc_ip_val}"
 
     if grep -qF "$ad_dom_dns_fwd_rule_val" /etc/dnsmasq.conf; then
@@ -240,10 +240,10 @@ setup_hqsrv_m2_dns_forwarding_for_ad() {
     fi
 }
 
-# Функция: setup_hqsrv_m2_moodle_inst_p1_services_db
+# Функция: setup_hq_srv_m2_moodle_inst_p1_services_db
 # Назначение: Установка Moodle (Часть 1: Пакеты, БД, файлы).
-setup_hqsrv_m2_moodle_inst_p1_services_db() {
-    log_msg "${P_ACTION} Установка Moodle (Часть 1: Пакеты, БД, файлы) на HQSRV..."
+setup_hq_srv_m2_moodle_inst_p1_services_db() {
+    log_msg "${P_ACTION} Установка Moodle (Часть 1: Пакеты, БД, файлы) на HQ_SRV..."
     
     local moodle_req_pkgs_val="apache2 mariadb-server php8.2 apache2-mod_php8.2 php8.2-gd php8.2-curl php8.2-intl php8.2-mysqli php8.2-xml php8.2-xmlrpc php8.2-zip php8.2-soap php8.2-mbstring php8.2-opcache php8.2-json php8.2-ldap php8.2-xmlreader php8.2-fileinfo php8.2-sodium unzip curl"
     local moodle_check_cmds_val="apachectl mysql php unzip curl"
@@ -261,7 +261,7 @@ setup_hqsrv_m2_moodle_inst_p1_services_db() {
         return 1
     fi
 
-    local mariadb_root_pass_val; ask_param "Пароль для пользователя root MariaDB" "$m2_hqsrv_mariadb_root_pass_def" "mariadb_root_pass_val"
+    local mariadb_root_pass_val; ask_param "Пароль для пользователя root MariaDB" "$m2_hq_srv_mariadb_root_pass_def" "mariadb_root_pass_val"
     
     if mysql -u root -p"$mariadb_root_pass_val" -e "SELECT 1;" &>/dev/null; then
         log_msg "${P_INFO} Пароль root для MariaDB ('${C_CYAN}$mariadb_root_pass_val${P_INFO}') уже установлен и подходит. Пропуск 'mysql_secure_installation'."
@@ -278,9 +278,9 @@ setup_hqsrv_m2_moodle_inst_p1_services_db() {
         log_msg "${P_WARN} Не удалось подключиться к MariaDB как root. Возможно, пароль уже установлен и отличается."
     fi
 
-    local moodle_db_name_val="$m2_hqsrv_moodle_db_name"
-    local moodle_db_user_val="$m2_hqsrv_moodle_db_user"
-    local moodle_db_pass_val; ask_param "Пароль для пользователя БД Moodle ('${moodle_db_user_val}')" "$m2_hqsrv_moodle_db_pass_def" "moodle_db_pass_val"
+    local moodle_db_name_val="$m2_hq_srv_moodle_db_name"
+    local moodle_db_user_val="$m2_hq_srv_moodle_db_user"
+    local moodle_db_pass_val; ask_param "Пароль для пользователя БД Moodle ('${moodle_db_user_val}')" "$m2_hq_srv_moodle_db_pass_def" "moodle_db_pass_val"
     
     local moodle_db_sql_cmds_val
     moodle_db_sql_cmds_val=$(cat <<EOF
@@ -323,7 +323,7 @@ EOF
     reg_sneaky_cmd "mkdir -p /var/www/moodledata; chown ...; chmod ..."
 
     local php_ini_pth_val="/etc/php/8.2/apache2-mod_php/php.ini"
-    local php_max_input_vars_val="$m2_hqsrv_moodle_php_max_input_vars"
+    local php_max_input_vars_val="$m2_hq_srv_moodle_php_max_input_vars"
     if grep -q 'max_input_vars' "$php_ini_pth_val"; then
         sed -i "s/^[;[:space:]]*max_input_vars[[:space:]]*=.*$/max_input_vars = $php_max_input_vars_val/" "$php_ini_pth_val"
     else
@@ -342,19 +342,19 @@ EOF
     fi
 }
 
-# Функция: setup_hqsrv_m2_moodle_inst_p2_web_setup_pmt
+# Функция: setup_hq_srv_m2_moodle_inst_p2_web_setup_pmt
 # Назначение: Информирует о необходимости веб-установки Moodle.
-setup_hqsrv_m2_moodle_inst_p2_web_setup_pmt() {
-    local vm_role_code="HQSRV"; local mod_num_val="2"
+setup_hq_srv_m2_moodle_inst_p2_web_setup_pmt() {
+    local vm_role_code="HQ_SRV"; local mod_num_val="2"
     local flag_manual_web_setup_pending_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_pending_manual.flag"
     
-    local hqsrv_ip_for_url_val; hqsrv_ip_for_url_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local moodle_db_name_pmt_val="$m2_hqsrv_moodle_db_name"
-    local moodle_db_user_pmt_val="$m2_hqsrv_moodle_db_user"
-    local moodle_db_pass_pmt_val; ask_param "Пароль пользователя БД Moodle ('${moodle_db_user_pmt_val}') (тот же, что и на шаге 1)" "$m2_hqsrv_moodle_db_pass_def" "moodle_db_pass_pmt_val"
+    local hqsrv_ip_for_url_val; hqsrv_ip_for_url_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local moodle_db_name_pmt_val="$m2_hq_srv_moodle_db_name"
+    local moodle_db_user_pmt_val="$m2_hq_srv_moodle_db_user"
+    local moodle_db_pass_pmt_val; ask_param "Пароль пользователя БД Moodle ('${moodle_db_user_pmt_val}') (тот же, что и на шаге 1)" "$m2_hq_srv_moodle_db_pass_def" "moodle_db_pass_pmt_val"
     
-    local moodle_site_name_pmt_val="$m2_hqsrv_moodle_site_name_def"
-    local moodle_admin_pass_pmt_val="$m2_hqsrv_moodle_admin_pass_def"
+    local moodle_site_name_pmt_val="$m2_hq_srv_moodle_site_name_def"
+    local moodle_admin_pass_pmt_val="$m2_hq_srv_moodle_admin_pass_def"
 
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ТРЕБУЕТСЯ РУЧНОЕ ДЕЙСТВИЕ: Веб-установка Moodle${C_RESET}"
     log_msg "${P_ACTION}   Откройте в браузере URL: ${C_CYAN}http://${hqsrv_ip_for_url_val}/${C_RESET}"
@@ -379,11 +379,11 @@ setup_hqsrv_m2_moodle_inst_p2_web_setup_pmt() {
     return 2
 }
 
-# Функция: setup_hqsrv_m2_moodle_inst_p3_proxy_cfg
+# Функция: setup_hq_srv_m2_moodle_inst_p3_proxy_cfg
 # Назначение: Обновляет config.php Moodle для работы через прокси.
-setup_hqsrv_m2_moodle_inst_p3_proxy_cfg() {
-    local vm_role_code="HQSRV"; local mod_num_val="2"
-    local flag_manual_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_hqsrv_m2_moodle_inst_p2_web_setup_pmt_pending_manual.flag"
+setup_hq_srv_m2_moodle_inst_p3_proxy_cfg() {
+    local vm_role_code="HQ_SRV"; local mod_num_val="2"
+    local flag_manual_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_hq_srv_m2_moodle_inst_p2_web_setup_pmt_pending_manual.flag"
     
     log_msg "${P_ACTION} Настройка Moodle для работы через обратный прокси (Часть 3)..."
     if [[ ! -f "/var/www/html/config.php" ]]; then
@@ -391,7 +391,7 @@ setup_hqsrv_m2_moodle_inst_p3_proxy_cfg() {
         return 1
     fi
 
-    local moodle_public_wwwroot_val; ask_param "Публичный WWWROOT Moodle (URL через прокси)" "$m2_hqsrv_moodle_public_wwwroot" "moodle_public_wwwroot_val"
+    local moodle_public_wwwroot_val; ask_param "Публичный WWWROOT Moodle (URL через прокси)" "$m2_hq_srv_moodle_public_wwwroot" "moodle_public_wwwroot_val"
     
     local tmp_moodle_cfg_pth_val; tmp_moodle_cfg_pth_val=$(mktemp)
     if [[ -z "$tmp_moodle_cfg_pth_val" ]]; then log_msg "${P_ERROR} Не удалось создать временный файл."; return 1; fi
@@ -414,4 +414,4 @@ setup_hqsrv_m2_moodle_inst_p3_proxy_cfg() {
     fi
 }
 
-# --- Мета-комментарий: Конец функций-шагов для HQSRV - Модуль 2 (Сценарий: default) ---
+# --- Мета-комментарий: Конец функций-шагов для HQ_SRV - Модуль 2 (Сценарий: default) ---

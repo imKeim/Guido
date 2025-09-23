@@ -1,16 +1,16 @@
 #!/bin/bash
-# Файл: fx_lib/default/hqrtr/hqrtr_m1_fx.sh
-# Содержит функции-шаги для роли HQRTR, Модуль 1, сценарий "default".
+# Файл: fx_lib/default/hq_rtr/hq_rtr_m1_fx.sh
+# Содержит функции-шаги для роли HQ_RTR, Модуль 1, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для HQRTR - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_RTR - Модуль 1 (Сценарий: default) ---
 
-# Функция: setup_hqrtr_m1_hn
-# Назначение: Устанавливает имя хоста (FQDN) для ВМ HQRTR.
-setup_hqrtr_m1_hn() {
-    local def_fqdn_val="${EXPECTED_FQDNS["hqrtr"]}"
+# Функция: setup_hq_rtr_m1_hn
+# Назначение: Устанавливает имя хоста (FQDN) для ВМ HQ_RTR.
+setup_hq_rtr_m1_hn() {
+    local def_fqdn_val="${EXPECTED_FQDNS["hq_rtr"]}"
     local target_fqdn_val
-    ask_param "FQDN для HQRTR" "$def_fqdn_val" "target_fqdn_val"
+    ask_param "FQDN для HQ_RTR" "$def_fqdn_val" "target_fqdn_val"
 
     log_msg "${P_ACTION} Установка имени хоста на: ${C_CYAN}$target_fqdn_val${C_RESET}..."
     if hostnamectl set-hostname "$target_fqdn_val"; then
@@ -24,17 +24,17 @@ setup_hqrtr_m1_hn() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_net_ifaces_wan_lan_trunk
-# Назначение: Настраивает WAN и LAN Trunk интерфейсы для ВМ HQRTR.
-setup_hqrtr_m1_net_ifaces_wan_lan_trunk() {
-    local wan_iface_val; ask_param "WAN интерфейс HQRTR" "$m1_hqrtr_wan_iface" "wan_iface_val"
-    local wan_ip_val; ask_val_param "IP-адрес WAN HQRTR (CIDR)" "$m1_hqrtr_wan_ip" "is_ipcidr_valid" "wan_ip_val"
-    local wan_gw_val; ask_val_param "Шлюз WAN HQRTR" "$m1_hqrtr_wan_gw" "is_ipcidr_valid" "wan_gw_val"
-    local lan_trunk_iface_val; ask_param "LAN Trunk интерфейс HQRTR" "$m1_hqrtr_lan_trunk_iface" "lan_trunk_iface_val"
+# Функция: setup_hq_rtr_m1_net_ifaces_wan_lan_trunk
+# Назначение: Настраивает WAN и LAN Trunk интерфейсы для ВМ HQ_RTR.
+setup_hq_rtr_m1_net_ifaces_wan_lan_trunk() {
+    local wan_iface_val; ask_param "WAN интерфейс HQ_RTR" "$m1_hq_rtr_wan_iface" "wan_iface_val"
+    local wan_ip_val; ask_val_param "IP-адрес WAN HQ_RTR (CIDR)" "$m1_hq_rtr_wan_ip" "is_ipcidr_valid" "wan_ip_val"
+    local wan_gw_val; ask_val_param "Шлюз WAN HQ_RTR" "$m1_hq_rtr_wan_gw" "is_ipcidr_valid" "wan_gw_val"
+    local lan_trunk_iface_val; ask_param "LAN Trunk интерфейс HQ_RTR" "$m1_hq_rtr_lan_trunk_iface" "lan_trunk_iface_val"
     local tmp_dns1_val; ask_val_param "Основной DNS (временный, для начальной настройки)" "$DEF_DNS_PRIMARY" "is_ipcidr_valid" "tmp_dns1_val"
     local tmp_dns2_val; ask_val_param "Запасной DNS (временный, для начальной настройки)" "$DEF_DNS_SECONDARY" "is_ipcidr_valid" "tmp_dns2_val"
 
-    log_msg "${P_ACTION} Настройка WAN и LAN Trunk интерфейсов HQRTR..."
+    log_msg "${P_ACTION} Настройка WAN и LAN Trunk интерфейсов HQ_RTR..."
     mkdir -p "/etc/net/ifaces/${wan_iface_val}" && find "/etc/net/ifaces/${wan_iface_val}" -mindepth 1 -delete
     if ! {
         echo 'TYPE=eth' > "/etc/net/ifaces/${wan_iface_val}/options" &&
@@ -63,9 +63,9 @@ EOF
     return 0
 }
 
-# Функция: setup_hqrtr_m1_ip_forwarding
-setup_hqrtr_m1_ip_forwarding() {
-    log_msg "${P_ACTION} Включение IP форвардинга для HQRTR..."
+# Функция: setup_hq_rtr_m1_ip_forwarding
+setup_hq_rtr_m1_ip_forwarding() {
+    log_msg "${P_ACTION} Включение IP форвардинга для HQ_RTR..."
     sed -i 's/^[#[:space:]]*net.ipv4.ip_forward[[:space:]]*=[[:space:]]*0/net.ipv4.ip_forward = 1/g' /etc/net/sysctl.conf
     if ! grep -q '^net.ipv4.ip_forward[[:space:]]*=[[:space:]]*1' /etc/net/sysctl.conf; then
         echo 'net.ipv4.ip_forward = 1' >> /etc/net/sysctl.conf
@@ -83,8 +83,8 @@ setup_hqrtr_m1_ip_forwarding() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_net_restart_base_ip
-setup_hqrtr_m1_net_restart_base_ip() {
+# Функция: setup_hq_rtr_m1_net_restart_base_ip
+setup_hq_rtr_m1_net_restart_base_ip() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек IP..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -98,16 +98,16 @@ setup_hqrtr_m1_net_restart_base_ip() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_iptables_nat_mss
-setup_hqrtr_m1_iptables_nat_mss() {
-    log_msg "${P_ACTION} Настройка iptables NAT и TCP MSS clamping для HQRTR..."
+# Функция: setup_hq_rtr_m1_iptables_nat_mss
+setup_hq_rtr_m1_iptables_nat_mss() {
+    log_msg "${P_ACTION} Настройка iptables NAT и TCP MSS clamping для HQ_RTR..."
     if ! ensure_pkgs "iptables" "iptables"; then
         log_msg "${P_ERROR} Пакет iptables не установлен."
         return 1
     fi
 
-    local wan_iface_for_nat_val="$m1_hqrtr_wan_iface"
-    local gre_iface_for_mss_val="$m1_hqrtr_gre_iface"
+    local wan_iface_for_nat_val="$m1_hq_rtr_wan_iface"
+    local gre_iface_for_mss_val="$m1_hq_rtr_gre_iface"
 
     iptables -t nat -F POSTROUTING
     iptables -t mangle -F FORWARD
@@ -140,8 +140,8 @@ setup_hqrtr_m1_iptables_nat_mss() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_user_net_admin
-setup_hqrtr_m1_user_net_admin() {
+# Функция: setup_hq_rtr_m1_user_net_admin
+setup_hq_rtr_m1_user_net_admin() {
     local username_val="net_admin"
     local target_uid_val; ask_val_param "UID для пользователя '${username_val}'" "$DEF_NET_ADMIN_UID" "is_uid_valid" "target_uid_val"
     local target_pass_val; ask_param "Пароль для пользователя '${username_val}'" "$DEF_NET_ADMIN_PASS" "target_pass_val"
@@ -174,18 +174,18 @@ setup_hqrtr_m1_user_net_admin() {
     return 0
 }
 
-# Функция: setup_hqrtr_m1_vlans
-setup_hqrtr_m1_vlans() {
-    local trunk_iface_val; ask_param "Trunk интерфейс для создания VLAN'ов" "$m1_hqrtr_lan_trunk_iface" "trunk_iface_val"
+# Функция: setup_hq_rtr_m1_vlans
+setup_hq_rtr_m1_vlans() {
+    local trunk_iface_val; ask_param "Trunk интерфейс для создания VLAN'ов" "$m1_hq_rtr_lan_trunk_iface" "trunk_iface_val"
     
-    local vlan_srv_id_val="$m1_hqrtr_vlan_srv_id"
-    local vlan_srv_ip_val; ask_val_param "IP-адрес для VLAN серверов (vlan${vlan_srv_id_val} на ${trunk_iface_val})" "$m1_hqrtr_vlan_srv_ip" "is_ipcidr_valid" "vlan_srv_ip_val"
+    local vlan_srv_id_val="$m1_hq_rtr_vlan_srv_id"
+    local vlan_srv_ip_val; ask_val_param "IP-адрес для VLAN серверов (vlan${vlan_srv_id_val} на ${trunk_iface_val})" "$m1_hq_rtr_vlan_srv_ip" "is_ipcidr_valid" "vlan_srv_ip_val"
     
-    local vlan_cli_id_val="$m1_hqrtr_vlan_cli_id"
-    local vlan_cli_ip_val; ask_val_param "IP-адрес для VLAN клиентов (vlan${vlan_cli_id_val} на ${trunk_iface_val})" "$m1_hqrtr_vlan_cli_ip" "is_ipcidr_valid" "vlan_cli_ip_val"
+    local vlan_cli_id_val="$m1_hq_rtr_vlan_cli_id"
+    local vlan_cli_ip_val; ask_val_param "IP-адрес для VLAN клиентов (vlan${vlan_cli_id_val} на ${trunk_iface_val})" "$m1_hq_rtr_vlan_cli_ip" "is_ipcidr_valid" "vlan_cli_ip_val"
 
-    local vlan_mgmt_id_val; ask_val_param "VLAN ID для сети Управления" "$m1_hqrtr_vlan_mgmt_id_def" "is_vlan_valid" "vlan_mgmt_id_val"
-    local vlan_mgmt_ip_val; ask_val_param "IP-адрес для VLAN Управления (vlan${vlan_mgmt_id_val} на ${trunk_iface_val})" "$m1_hqrtr_vlan_mgmt_ip_def" "is_ipcidr_valid" "vlan_mgmt_ip_val"
+    local vlan_mgmt_id_val; ask_val_param "VLAN ID для сети Управления" "$m1_hq_rtr_vlan_mgmt_id_def" "is_vlan_valid" "vlan_mgmt_id_val"
+    local vlan_mgmt_ip_val; ask_val_param "IP-адрес для VLAN Управления (vlan${vlan_mgmt_id_val} на ${trunk_iface_val})" "$m1_hq_rtr_vlan_mgmt_ip_def" "is_ipcidr_valid" "vlan_mgmt_ip_val"
 
     log_msg "${P_ACTION} Настройка VLAN-интерфейсов на ${C_CYAN}${trunk_iface_val}${C_RESET}..."
 
@@ -237,8 +237,8 @@ EOF
     return 0
 }
 
-# Функция: setup_hqrtr_m1_net_restart_vlans
-setup_hqrtr_m1_net_restart_vlans() {
+# Функция: setup_hq_rtr_m1_net_restart_vlans
+setup_hq_rtr_m1_net_restart_vlans() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек VLAN..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -252,16 +252,16 @@ setup_hqrtr_m1_net_restart_vlans() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_gre_tunnel
-setup_hqrtr_m1_gre_tunnel() {
-    local gre_iface_name_val; ask_param "Имя GRE интерфейса" "$m1_hqrtr_gre_iface" "gre_iface_name_val"
-    local gre_tunnel_ip_val; ask_val_param "IP-адрес GRE интерфейса (CIDR)" "$m1_hqrtr_gre_tunnel_ip" "is_ipcidr_valid" "gre_tunnel_ip_val"
+# Функция: setup_hq_rtr_m1_gre_tunnel
+setup_hq_rtr_m1_gre_tunnel() {
+    local gre_iface_name_val; ask_param "Имя GRE интерфейса" "$m1_hq_rtr_gre_iface" "gre_iface_name_val"
+    local gre_tunnel_ip_val; ask_val_param "IP-адрес GRE интерфейса (CIDR)" "$m1_hq_rtr_gre_tunnel_ip" "is_ipcidr_valid" "gre_tunnel_ip_val"
     
-    local def_tunnel_local_ip_val; def_tunnel_local_ip_val=$(get_ip_only "$m1_hqrtr_wan_ip")
-    local tunnel_local_ip_val; ask_val_param "Локальный IP для туннеля (WAN IP HQRTR)" "$def_tunnel_local_ip_val" "is_ipcidr_valid" "tunnel_local_ip_val"
+    local def_tunnel_local_ip_val; def_tunnel_local_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
+    local tunnel_local_ip_val; ask_val_param "Локальный IP для туннеля (WAN IP HQ_RTR)" "$def_tunnel_local_ip_val" "is_ipcidr_valid" "tunnel_local_ip_val"
     tunnel_local_ip_val=$(get_ip_only "$tunnel_local_ip_val")
 
-    local tunnel_remote_ip_val; ask_val_param "Удаленный IP для туннеля (WAN IP BRRTR)" "$m1_hqrtr_gre_remote_ip_var" "is_ipcidr_valid" "tunnel_remote_ip_val"
+    local tunnel_remote_ip_val; ask_val_param "Удаленный IP для туннеля (WAN IP BR_RTR)" "$m1_hq_rtr_gre_remote_ip_var" "is_ipcidr_valid" "tunnel_remote_ip_val"
     tunnel_remote_ip_val=$(get_ip_only "$tunnel_remote_ip_val")
 
     log_msg "${P_ACTION} Настройка GRE туннеля ${C_CYAN}${gre_iface_name_val}${C_RESET}..."
@@ -286,8 +286,8 @@ EOF
     return 0
 }
 
-# Функция: setup_hqrtr_m1_net_restart_gre
-setup_hqrtr_m1_net_restart_gre() {
+# Функция: setup_hq_rtr_m1_net_restart_gre
+setup_hq_rtr_m1_net_restart_gre() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек GRE..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -301,9 +301,9 @@ setup_hqrtr_m1_net_restart_gre() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_tz
-setup_hqrtr_m1_tz() {
-    log_msg "${P_ACTION} Настройка часового пояса для HQRTR..."
+# Функция: setup_hq_rtr_m1_tz
+setup_hq_rtr_m1_tz() {
+    log_msg "${P_ACTION} Настройка часового пояса для HQ_RTR..."
     if ! command -v timedatectl &>/dev/null; then log_msg "${P_ERROR} timedatectl не найден."; return 1; fi
     if ! (apt-get update -y && apt-get install -y tzdata); then log_msg "${P_ERROR} Ошибка установки tzdata."; return 1; fi
     log_msg "${P_OK} Пакет tzdata установлен/обновлен."
@@ -323,15 +323,15 @@ setup_hqrtr_m1_tz() {
     fi
 }
 
-# Функция: setup_hqrtr_m1_dns_cli_final
-setup_hqrtr_m1_dns_cli_final() {
-    log_msg "${P_ACTION} Финальная настройка DNS-клиента для HQRTR..."
-    local vlan_srv_id_for_dns_val="$m1_hqrtr_vlan_srv_id"
-    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQSRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
+# Функция: setup_hq_rtr_m1_dns_cli_final
+setup_hq_rtr_m1_dns_cli_final() {
+    log_msg "${P_ACTION} Финальная настройка DNS-клиента для HQ_RTR..."
+    local vlan_srv_id_for_dns_val="$m1_hq_rtr_vlan_srv_id"
+    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
     hqsrv_dns_ip_val=$(get_ip_only "$hqsrv_dns_ip_val")
     
-    local wan_iface_to_deny_dns_val="$m1_hqrtr_wan_iface"
+    local wan_iface_to_deny_dns_val="$m1_hq_rtr_wan_iface"
 
     mkdir -p "/etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}"
     if ! cat <<EOF > "/etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}/resolv.conf"
@@ -344,7 +344,7 @@ EOF
     log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}vlan${vlan_srv_id_for_dns_val}${C_GREEN} настроен (DNS: $hqsrv_dns_ip_val)."
     reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hqsrv_dns_ip_val}' > /etc/net/ifaces/vlan${vlan_srv_id_for_dns_val}/resolv.conf"
 
-    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на HQRTR"
+    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на HQ_RTR"
     set_cfg_val "/etc/resolvconf.conf" "deny_interfaces" "\"${wan_iface_to_deny_dns_val} lo.dnsmasq\"" "# Запретить обновление DNS с WAN и локального dnsmasq (если он был)"
     log_msg "${P_OK} Файл /etc/resolvconf.conf настроен."
     reg_sneaky_cmd "set_cfg_val /etc/resolvconf.conf resolv_conf_local_only NO"
@@ -362,24 +362,24 @@ EOF
     return 0
 }
 
-# Функция: setup_hqrtr_m1_dhcp_srv
-setup_hqrtr_m1_dhcp_srv() {
-    log_msg "${P_ACTION} Настройка DHCP-сервера (dnsmasq) на HQRTR..."
+# Функция: setup_hq_rtr_m1_dhcp_srv
+setup_hq_rtr_m1_dhcp_srv() {
+    log_msg "${P_ACTION} Настройка DHCP-сервера (dnsmasq) на HQ_RTR..."
     if ! ensure_pkgs "dnsmasq" "dnsmasq"; then
         log_msg "${P_ERROR} Пакет dnsmasq не установлен и не может быть установлен."
         return 1
     fi
 
-    local vlan_cli_id_for_dhcp_val="$m1_hqrtr_vlan_cli_id"
-    local listen_addr_def_val; listen_addr_def_val=$(get_ip_only "$m1_hqrtr_vlan_cli_ip")
-    local range_start_def_val="$m1_hqrtr_dhcp_range_start_def"
-    local range_end_def_val="$m1_hqrtr_dhcp_range_end_def"
-    local range_mask_def_val="$m1_hqrtr_dhcp_subnet_mask_def"
-    local hqcli_cli_id_def_val="$m1_hqcli_dhcp_cli_id_def"
-    local hqcli_reserved_ip_def_val="$m1_hqcli_dhcp_reserved_ip_def"
-    local dns_srv_for_cli_def_val; dns_srv_for_cli_def_val=$(get_ip_only "$m1_hqsrv_lan_ip")
+    local vlan_cli_id_for_dhcp_val="$m1_hq_rtr_vlan_cli_id"
+    local listen_addr_def_val; listen_addr_def_val=$(get_ip_only "$m1_hq_rtr_vlan_cli_ip")
+    local range_start_def_val="$m1_hq_rtr_dhcp_range_start_def"
+    local range_end_def_val="$m1_hq_rtr_dhcp_range_end_def"
+    local range_mask_def_val="$m1_hq_rtr_dhcp_subnet_mask_def"
+    local hqcli_cli_id_def_val="$m1_hq_cli_dhcp_cli_id_def"
+    local hqcli_reserved_ip_def_val="$m1_hq_cli_dhcp_reserved_ip_def"
+    local dns_srv_for_cli_def_val; dns_srv_for_cli_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
 
-    local listen_addr_val; ask_val_param "IP-адрес для прослушивания DHCP (IP HQRTR в VLAN ${vlan_cli_id_for_dhcp_val})" "$listen_addr_def_val" "is_ipcidr_valid" "listen_addr_val"
+    local listen_addr_val; ask_val_param "IP-адрес для прослушивания DHCP (IP HQ_RTR в VLAN ${vlan_cli_id_for_dhcp_val})" "$listen_addr_def_val" "is_ipcidr_valid" "listen_addr_val"
     listen_addr_val=$(get_ip_only "$listen_addr_val")
     local range_start_val; ask_val_param "Начальный IP-адрес DHCP-диапазона" "$range_start_def_val" "is_ipcidr_valid" "range_start_val"; range_start_val=$(get_ip_only "$range_start_val")
     local range_end_val; ask_val_param "Конечный IP-адрес DHCP-диапазона" "$range_end_def_val" "is_ipcidr_valid" "range_end_val"; range_end_val=$(get_ip_only "$range_end_val")

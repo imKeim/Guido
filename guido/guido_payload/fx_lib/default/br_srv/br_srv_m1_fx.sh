@@ -1,16 +1,16 @@
 #!/bin/bash
-# Файл: fx_lib/default/brsrv/brsrv_m1_fx.sh
-# Содержит функции-шаги для роли BRSRV, Модуль 1, сценарий "default".
+# Файл: fx_lib/default/br_srv/br_srv_m1_fx.sh
+# Содержит функции-шаги для роли BR_SRV, Модуль 1, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для BRSRV - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для BR_SRV - Модуль 1 (Сценарий: default) ---
 
-# Функция: setup_brsrv_m1_hn
-# Назначение: Устанавливает имя хоста (FQDN) для ВМ BRSRV.
-setup_brsrv_m1_hn() {
-    local def_fqdn_val="${EXPECTED_FQDNS["brsrv"]}"
+# Функция: setup_br_srv_m1_hn
+# Назначение: Устанавливает имя хоста (FQDN) для ВМ BR_SRV.
+setup_br_srv_m1_hn() {
+    local def_fqdn_val="${EXPECTED_FQDNS["br_srv"]}"
     local target_fqdn_val
-    ask_param "FQDN для BRSRV" "$def_fqdn_val" "target_fqdn_val"
+    ask_param "FQDN для BR_SRV" "$def_fqdn_val" "target_fqdn_val"
 
     log_msg "${P_ACTION} Установка имени хоста на: ${C_CYAN}$target_fqdn_val${C_RESET}..."
     if hostnamectl set-hostname "$target_fqdn_val"; then
@@ -24,14 +24,14 @@ setup_brsrv_m1_hn() {
     fi
 }
 
-# Функция: setup_brsrv_m1_net_iface
-# Назначение: Настраивает LAN-интерфейс для ВМ BRSRV.
-setup_brsrv_m1_net_iface() {
-    local lan_iface_val; ask_param "LAN интерфейс BRSRV" "$m1_brsrv_lan_iface" "lan_iface_val"
-    local lan_ip_val; ask_val_param "IP-адрес LAN BRSRV (CIDR)" "$m1_brsrv_lan_ip" "is_ipcidr_valid" "lan_ip_val"
-    local lan_gw_val; ask_val_param "Шлюз LAN BRSRV" "$m1_brsrv_lan_gw" "is_ipcidr_valid" "lan_gw_val"
+# Функция: setup_br_srv_m1_net_iface
+# Назначение: Настраивает LAN-интерфейс для ВМ BR_SRV.
+setup_br_srv_m1_net_iface() {
+    local lan_iface_val; ask_param "LAN интерфейс BR_SRV" "$m1_br_srv_lan_iface" "lan_iface_val"
+    local lan_ip_val; ask_val_param "IP-адрес LAN BR_SRV (CIDR)" "$m1_br_srv_lan_ip" "is_ipcidr_valid" "lan_ip_val"
+    local lan_gw_val; ask_val_param "Шлюз LAN BR_SRV" "$m1_br_srv_lan_gw" "is_ipcidr_valid" "lan_gw_val"
 
-    log_msg "${P_ACTION} Настройка LAN интерфейса BRSRV..."
+    log_msg "${P_ACTION} Настройка LAN интерфейса BR_SRV..."
     mkdir -p "/etc/net/ifaces/${lan_iface_val}" && find "/etc/net/ifaces/${lan_iface_val}" -mindepth 1 -delete
     if ! {
         echo 'TYPE=eth' > "/etc/net/ifaces/${lan_iface_val}/options" &&
@@ -48,8 +48,8 @@ setup_brsrv_m1_net_iface() {
     return 0
 }
 
-# Функция: setup_brsrv_m1_net_restart_base_ip
-setup_brsrv_m1_net_restart_base_ip() {
+# Функция: setup_br_srv_m1_net_restart_base_ip
+setup_br_srv_m1_net_restart_base_ip() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек IP..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -63,8 +63,8 @@ setup_brsrv_m1_net_restart_base_ip() {
     fi
 }
 
-# Функция: setup_brsrv_m1_user_sshuser
-setup_brsrv_m1_user_sshuser() {
+# Функция: setup_br_srv_m1_user_sshuser
+setup_br_srv_m1_user_sshuser() {
     local username_val="sshuser"
     local target_uid_val; ask_val_param "UID для пользователя '${username_val}'" "$DEF_SSHUSER_UID" "is_uid_valid" "target_uid_val"
     local target_pass_val; ask_param "Пароль для пользователя '${username_val}'" "$DEF_SSHUSER_PASS" "target_pass_val"
@@ -97,9 +97,9 @@ setup_brsrv_m1_user_sshuser() {
     return 0
 }
 
-# Функция: setup_brsrv_m1_ssh_srv
-setup_brsrv_m1_ssh_srv() {
-    log_msg "${P_ACTION} Настройка SSH-сервера на BRSRV..."
+# Функция: setup_br_srv_m1_ssh_srv
+setup_br_srv_m1_ssh_srv() {
+    log_msg "${P_ACTION} Настройка SSH-сервера на BR_SRV..."
     if ! ensure_pkgs "sshd" "openssh-server"; then
         log_msg "${P_ERROR} Пакет openssh-server не установлен."
         return 1
@@ -139,9 +139,9 @@ setup_brsrv_m1_ssh_srv() {
     fi
 }
 
-# Функция: setup_brsrv_m1_tz
-setup_brsrv_m1_tz() {
-    log_msg "${P_ACTION} Настройка часового пояса для BRSRV..."
+# Функция: setup_br_srv_m1_tz
+setup_br_srv_m1_tz() {
+    log_msg "${P_ACTION} Настройка часового пояса для BR_SRV..."
     if ! command -v timedatectl &>/dev/null; then log_msg "${P_ERROR} timedatectl не найден."; return 1; fi
     if ! (apt-get update -y && apt-get install -y tzdata); then log_msg "${P_ERROR} Ошибка установки tzdata."; return 1; fi
     log_msg "${P_OK} Пакет tzdata установлен/обновлен."
@@ -161,12 +161,12 @@ setup_brsrv_m1_tz() {
     fi
 }
 
-# Функция: setup_brsrv_m1_dns_cli_final
-setup_brsrv_m1_dns_cli_final() {
-    log_msg "${P_ACTION} Финальная настройка DNS-клиента для BRSRV..."
-    local lan_iface_for_dns_val="$m1_brsrv_lan_iface"
-    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQSRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
+# Функция: setup_br_srv_m1_dns_cli_final
+setup_br_srv_m1_dns_cli_final() {
+    log_msg "${P_ACTION} Финальная настройка DNS-клиента для BR_SRV..."
+    local lan_iface_for_dns_val="$m1_br_srv_lan_iface"
+    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
     hqsrv_dns_ip_val=$(get_ip_only "$hqsrv_dns_ip_val")
     
     mkdir -p "/etc/net/ifaces/${lan_iface_for_dns_val}"
@@ -180,15 +180,15 @@ EOF
     log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}${lan_iface_for_dns_val}${C_GREEN} настроен (DNS: $hqsrv_dns_ip_val)."
     reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hqsrv_dns_ip_val}' > /etc/net/ifaces/${lan_iface_for_dns_val}/resolv.conf"
 
-    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на BRSRV"
+    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на BR_SRV"
     log_msg "${P_OK} Файл /etc/resolvconf.conf настроен."
     reg_sneaky_cmd "set_cfg_val /etc/resolvconf.conf resolv_conf_local_only NO"
     
     return 0
 }
 
-# Функция: setup_brsrv_m1_net_restart_dns_update
-setup_brsrv_m1_net_restart_dns_update() {
+# Функция: setup_br_srv_m1_net_restart_dns_update
+setup_br_srv_m1_net_restart_dns_update() {
     log_msg "${P_ACTION} Обновление конфигурации DNS (resolvconf -u) и перезапуск сети..."
     if ! (resolvconf -u && systemctl restart network); then
         log_msg "${P_ERROR} Ошибка при обновлении DNS или перезапуске сетевой службы."; return 1
@@ -201,4 +201,4 @@ setup_brsrv_m1_net_restart_dns_update() {
     return 0
 }
 
-# --- Мета-комментарий: Конец функций-шагов для BRSRV - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Конец функций-шагов для BR_SRV - Модуль 1 (Сценарий: default) ---

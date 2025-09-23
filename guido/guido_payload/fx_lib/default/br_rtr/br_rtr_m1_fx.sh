@@ -1,16 +1,16 @@
 #!/bin/bash
-# Файл: fx_lib/default/brrtr/brrtr_m1_fx.sh
-# Содержит функции-шаги для роли BRRTR, Модуль 1, сценарий "default".
+# Файл: fx_lib/default/br_rtr/br_rtr_m1_fx.sh
+# Содержит функции-шаги для роли BR_RTR, Модуль 1, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для BRRTR - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для BR_RTR - Модуль 1 (Сценарий: default) ---
 
-# Функция: setup_brrtr_m1_hn
-# Назначение: Устанавливает имя хоста (FQDN) для ВМ BRRTR.
-setup_brrtr_m1_hn() {
-    local def_fqdn_val="${EXPECTED_FQDNS["brrtr"]}"
+# Функция: setup_br_rtr_m1_hn
+# Назначение: Устанавливает имя хоста (FQDN) для ВМ BR_RTR.
+setup_br_rtr_m1_hn() {
+    local def_fqdn_val="${EXPECTED_FQDNS["br_rtr"]}"
     local target_fqdn_val
-    ask_param "FQDN для BRRTR" "$def_fqdn_val" "target_fqdn_val"
+    ask_param "FQDN для BR_RTR" "$def_fqdn_val" "target_fqdn_val"
 
     log_msg "${P_ACTION} Установка имени хоста на: ${C_CYAN}$target_fqdn_val${C_RESET}..."
     if hostnamectl set-hostname "$target_fqdn_val"; then
@@ -24,18 +24,18 @@ setup_brrtr_m1_hn() {
     fi
 }
 
-# Функция: setup_brrtr_m1_net_ifaces_wan_lan
-# Назначение: Настраивает WAN и LAN интерфейсы для ВМ BRRTR.
-setup_brrtr_m1_net_ifaces_wan_lan() {
-    local wan_iface_val; ask_param "WAN интерфейс BRRTR" "$m1_brrtr_wan_iface" "wan_iface_val"
-    local wan_ip_val; ask_val_param "IP-адрес WAN BRRTR (CIDR)" "$m1_brrtr_wan_ip" "is_ipcidr_valid" "wan_ip_val"
-    local wan_gw_val; ask_val_param "Шлюз WAN BRRTR" "$m1_brrtr_wan_gw" "is_ipcidr_valid" "wan_gw_val"
-    local lan_iface_val; ask_param "LAN интерфейс BRRTR" "$m1_brrtr_lan_iface" "lan_iface_val"
-    local lan_ip_val; ask_val_param "IP-адрес LAN BRRTR (CIDR)" "$m1_brrtr_lan_ip" "is_ipcidr_valid" "lan_ip_val"
+# Функция: setup_br_rtr_m1_net_ifaces_wan_lan
+# Назначение: Настраивает WAN и LAN интерфейсы для ВМ BR_RTR.
+setup_br_rtr_m1_net_ifaces_wan_lan() {
+    local wan_iface_val; ask_param "WAN интерфейс BR_RTR" "$m1_br_rtr_wan_iface" "wan_iface_val"
+    local wan_ip_val; ask_val_param "IP-адрес WAN BR_RTR (CIDR)" "$m1_br_rtr_wan_ip" "is_ipcidr_valid" "wan_ip_val"
+    local wan_gw_val; ask_val_param "Шлюз WAN BR_RTR" "$m1_br_rtr_wan_gw" "is_ipcidr_valid" "wan_gw_val"
+    local lan_iface_val; ask_param "LAN интерфейс BR_RTR" "$m1_br_rtr_lan_iface" "lan_iface_val"
+    local lan_ip_val; ask_val_param "IP-адрес LAN BR_RTR (CIDR)" "$m1_br_rtr_lan_ip" "is_ipcidr_valid" "lan_ip_val"
     local tmp_dns1_val; ask_val_param "Основной DNS (временный, для начальной настройки)" "$DEF_DNS_PRIMARY" "is_ipcidr_valid" "tmp_dns1_val"
     local tmp_dns2_val; ask_val_param "Запасной DNS (временный, для начальной настройки)" "$DEF_DNS_SECONDARY" "is_ipcidr_valid" "tmp_dns2_val"
 
-    log_msg "${P_ACTION} Настройка WAN и LAN интерфейсов BRRTR..."
+    log_msg "${P_ACTION} Настройка WAN и LAN интерфейсов BR_RTR..."
     mkdir -p "/etc/net/ifaces/${wan_iface_val}" && find "/etc/net/ifaces/${wan_iface_val}" -mindepth 1 -delete
     if ! {
         echo 'TYPE=eth' > "/etc/net/ifaces/${wan_iface_val}/options" &&
@@ -68,9 +68,9 @@ EOF
     return 0
 }
 
-# Функция: setup_brrtr_m1_ip_forwarding
-setup_brrtr_m1_ip_forwarding() {
-    log_msg "${P_ACTION} Включение IP форвардинга для BRRTR..."
+# Функция: setup_br_rtr_m1_ip_forwarding
+setup_br_rtr_m1_ip_forwarding() {
+    log_msg "${P_ACTION} Включение IP форвардинга для BR_RTR..."
     sed -i 's/^[#[:space:]]*net.ipv4.ip_forward[[:space:]]*=[[:space:]]*0/net.ipv4.ip_forward = 1/g' /etc/net/sysctl.conf
     if ! grep -q '^net.ipv4.ip_forward[[:space:]]*=[[:space:]]*1' /etc/net/sysctl.conf; then
         echo 'net.ipv4.ip_forward = 1' >> /etc/net/sysctl.conf
@@ -88,8 +88,8 @@ setup_brrtr_m1_ip_forwarding() {
     fi
 }
 
-# Функция: setup_brrtr_m1_net_restart_base_ip
-setup_brrtr_m1_net_restart_base_ip() {
+# Функция: setup_br_rtr_m1_net_restart_base_ip
+setup_br_rtr_m1_net_restart_base_ip() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек IP..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -103,16 +103,16 @@ setup_brrtr_m1_net_restart_base_ip() {
     fi
 }
 
-# Функция: setup_brrtr_m1_iptables_nat_mss
-setup_brrtr_m1_iptables_nat_mss() {
-    log_msg "${P_ACTION} Настройка iptables NAT и TCP MSS clamping для BRRTR..."
+# Функция: setup_br_rtr_m1_iptables_nat_mss
+setup_br_rtr_m1_iptables_nat_mss() {
+    log_msg "${P_ACTION} Настройка iptables NAT и TCP MSS clamping для BR_RTR..."
     if ! ensure_pkgs "iptables" "iptables"; then
         log_msg "${P_ERROR} Пакет iptables не установлен."
         return 1
     fi
 
-    local wan_iface_for_nat_val="$m1_brrtr_wan_iface"
-    local gre_iface_for_mss_val="$m1_brrtr_gre_iface"
+    local wan_iface_for_nat_val="$m1_br_rtr_wan_iface"
+    local gre_iface_for_mss_val="$m1_br_rtr_gre_iface"
 
     iptables -t nat -F POSTROUTING
     iptables -t mangle -F FORWARD
@@ -145,8 +145,8 @@ setup_brrtr_m1_iptables_nat_mss() {
     fi
 }
 
-# Функция: setup_brrtr_m1_user_net_admin
-setup_brrtr_m1_user_net_admin() {
+# Функция: setup_br_rtr_m1_user_net_admin
+setup_br_rtr_m1_user_net_admin() {
     local username_val="net_admin"
     local target_uid_val; ask_val_param "UID для пользователя '${username_val}'" "$DEF_NET_ADMIN_UID" "is_uid_valid" "target_uid_val"
     local target_pass_val; ask_param "Пароль для пользователя '${username_val}'" "$DEF_NET_ADMIN_PASS" "target_pass_val"
@@ -179,16 +179,16 @@ setup_brrtr_m1_user_net_admin() {
     return 0
 }
 
-# Функция: setup_brrtr_m1_gre_tunnel
-setup_brrtr_m1_gre_tunnel() {
-    local gre_iface_name_val; ask_param "Имя GRE интерфейса" "$m1_brrtr_gre_iface" "gre_iface_name_val"
-    local gre_tunnel_ip_val; ask_val_param "IP-адрес GRE интерфейса (CIDR)" "$m1_brrtr_gre_tunnel_ip" "is_ipcidr_valid" "gre_tunnel_ip_val"
+# Функция: setup_br_rtr_m1_gre_tunnel
+setup_br_rtr_m1_gre_tunnel() {
+    local gre_iface_name_val; ask_param "Имя GRE интерфейса" "$m1_br_rtr_gre_iface" "gre_iface_name_val"
+    local gre_tunnel_ip_val; ask_val_param "IP-адрес GRE интерфейса (CIDR)" "$m1_br_rtr_gre_tunnel_ip" "is_ipcidr_valid" "gre_tunnel_ip_val"
     
-    local def_tunnel_local_ip_val; def_tunnel_local_ip_val=$(get_ip_only "$m1_brrtr_wan_ip")
-    local tunnel_local_ip_val; ask_val_param "Локальный IP для туннеля (WAN IP BRRTR)" "$def_tunnel_local_ip_val" "is_ipcidr_valid" "tunnel_local_ip_val"
+    local def_tunnel_local_ip_val; def_tunnel_local_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
+    local tunnel_local_ip_val; ask_val_param "Локальный IP для туннеля (WAN IP BR_RTR)" "$def_tunnel_local_ip_val" "is_ipcidr_valid" "tunnel_local_ip_val"
     tunnel_local_ip_val=$(get_ip_only "$tunnel_local_ip_val")
 
-    local tunnel_remote_ip_val; ask_val_param "Удаленный IP для туннеля (WAN IP HQRTR)" "$m1_brrtr_gre_remote_ip_var" "is_ipcidr_valid" "tunnel_remote_ip_val"
+    local tunnel_remote_ip_val; ask_val_param "Удаленный IP для туннеля (WAN IP HQ_RTR)" "$m1_br_rtr_gre_remote_ip_var" "is_ipcidr_valid" "tunnel_remote_ip_val"
     tunnel_remote_ip_val=$(get_ip_only "$tunnel_remote_ip_val")
 
     log_msg "${P_ACTION} Настройка GRE туннеля ${C_CYAN}${gre_iface_name_val}${C_RESET}..."
@@ -213,8 +213,8 @@ EOF
     return 0
 }
 
-# Функция: setup_brrtr_m1_net_restart_gre
-setup_brrtr_m1_net_restart_gre() {
+# Функция: setup_br_rtr_m1_net_restart_gre
+setup_br_rtr_m1_net_restart_gre() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек GRE..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -228,9 +228,9 @@ setup_brrtr_m1_net_restart_gre() {
     fi
 }
 
-# Функция: setup_brrtr_m1_tz
-setup_brrtr_m1_tz() {
-    log_msg "${P_ACTION} Настройка часового пояса для BRRTR..."
+# Функция: setup_br_rtr_m1_tz
+setup_br_rtr_m1_tz() {
+    log_msg "${P_ACTION} Настройка часового пояса для BR_RTR..."
     if ! command -v timedatectl &>/dev/null; then log_msg "${P_ERROR} timedatectl не найден."; return 1; fi
     if ! (apt-get update -y && apt-get install -y tzdata); then log_msg "${P_ERROR} Ошибка установки tzdata."; return 1; fi
     log_msg "${P_OK} Пакет tzdata установлен/обновлен."
@@ -250,15 +250,15 @@ setup_brrtr_m1_tz() {
     fi
 }
 
-# Функция: setup_brrtr_m1_dns_cli_final
-setup_brrtr_m1_dns_cli_final() {
-    log_msg "${P_ACTION} Финальная настройка DNS-клиента для BRRTR..."
-    local lan_iface_for_dns_val="$m1_brrtr_lan_iface"
-    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQSRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
+# Функция: setup_br_rtr_m1_dns_cli_final
+setup_br_rtr_m1_dns_cli_final() {
+    log_msg "${P_ACTION} Финальная настройка DNS-клиента для BR_RTR..."
+    local lan_iface_for_dns_val="$m1_br_rtr_lan_iface"
+    local hqsrv_dns_ip_def_val; hqsrv_dns_ip_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hqsrv_dns_ip_val; ask_val_param "IP-адрес DNS-сервера (HQ_SRV)" "$hqsrv_dns_ip_def_val" "is_ipcidr_valid" "hqsrv_dns_ip_val"
     hqsrv_dns_ip_val=$(get_ip_only "$hqsrv_dns_ip_val")
     
-    local wan_iface_to_deny_dns_val="$m1_brrtr_wan_iface"
+    local wan_iface_to_deny_dns_val="$m1_br_rtr_wan_iface"
 
     mkdir -p "/etc/net/ifaces/${lan_iface_for_dns_val}"
     if ! cat <<EOF > "/etc/net/ifaces/${lan_iface_for_dns_val}/resolv.conf"
@@ -271,7 +271,7 @@ EOF
     log_msg "${P_OK} Файл resolv.conf для ${C_CYAN}${lan_iface_for_dns_val}${C_GREEN} настроен (DNS: $hqsrv_dns_ip_val)."
     reg_sneaky_cmd "echo -e 'search ${DOM_NAME}\nnameserver ${hqsrv_dns_ip_val}' > /etc/net/ifaces/${lan_iface_for_dns_val}/resolv.conf"
 
-    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на BRRTR"
+    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на BR_RTR"
     set_cfg_val "/etc/resolvconf.conf" "deny_interfaces" "\"${wan_iface_to_deny_dns_val}\"" "# Запретить обновление DNS с WAN-интерфейса"
     log_msg "${P_OK} Файл /etc/resolvconf.conf настроен."
     reg_sneaky_cmd "set_cfg_val /etc/resolvconf.conf resolv_conf_local_only NO"
@@ -289,17 +289,17 @@ EOF
     return 0
 }
 
-# Функция: setup_brrtr_m1_ospf
-setup_brrtr_m1_ospf() {
-    log_msg "${P_ACTION} Настройка OSPF-маршрутизации (FRR) на BRRTR..."
+# Функция: setup_br_rtr_m1_ospf
+setup_br_rtr_m1_ospf() {
+    log_msg "${P_ACTION} Настройка OSPF-маршрутизации (FRR) на BR_RTR..."
     if ! ensure_pkgs "vtysh" "frr"; then
         log_msg "${P_ERROR} Пакет FRR (frr) не установлен."
         return 1
     fi
 
-    local gre_iface_for_ospf_val="$m1_brrtr_gre_iface"
-    local lan_iface_for_ospf_val="$m1_brrtr_lan_iface"
-    local router_id_def_val; router_id_def_val=$(get_ip_only "$m1_brrtr_gre_tunnel_ip")
+    local gre_iface_for_ospf_val="$m1_br_rtr_gre_iface"
+    local lan_iface_for_ospf_val="$m1_br_rtr_lan_iface"
+    local router_id_def_val; router_id_def_val=$(get_ip_only "$m1_br_rtr_gre_tunnel_ip")
     local ospf_auth_key_def_val="$m1_ospf_auth_key_def"
 
     local router_id_val; ask_val_param "Router ID для OSPF (рекомендуется IP GRE-туннеля)" "$router_id_def_val" "is_ipcidr_valid" "router_id_val"; router_id_val=$(get_ip_only "$router_id_val")
@@ -313,7 +313,7 @@ setup_brrtr_m1_ospf() {
 
     cat <<EOF > /etc/frr/frr.conf
 !
-! FRRouting configuration file for BRRTR
+! FRRouting configuration file for BR_RTR
 !
 hostname $(hostname -f)
 log file /var/log/frr/frr.log debugging
@@ -321,7 +321,7 @@ log file /var/log/frr/frr.log debugging
 ! OSPF Configuration
 !
 interface ${gre_iface_for_ospf_val}
- description GRE Tunnel to Headquarter Router (HQRTR)
+ description GRE Tunnel to Headquarter Router (HQ_RTR)
  ip ospf area 0.0.0.0
  ip ospf authentication message-digest
  ip ospf message-digest-key 1 md5 ${ospf_auth_key_frr_fmt_val}
@@ -329,7 +329,7 @@ interface ${gre_iface_for_ospf_val}
 exit
 !
 interface ${lan_iface_for_ospf_val}
- description Branch Office LAN (BRSRV Network)
+ description Branch Office LAN (BR_SRV Network)
  ip ospf area 0.0.0.0
 exit
 !

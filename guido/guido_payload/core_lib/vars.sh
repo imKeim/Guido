@@ -73,23 +73,23 @@ DEF_TZ="Asia/Vladivostok"                        # Часовой пояс по 
 # shellcheck disable=SC2034
 declare -A EXPECTED_FQDNS                        # Ассоциативный массив ожидаемых FQDN для каждой роли.
 EXPECTED_FQDNS["isp"]="isp.$DOM_NAME"
-EXPECTED_FQDNS["hqrtr"]="hq-rtr.$DOM_NAME"
-EXPECTED_FQDNS["brrtr"]="br-rtr.$DOM_NAME"
-EXPECTED_FQDNS["hqsrv"]="hq-srv.$DOM_NAME"
-EXPECTED_FQDNS["brsrv"]="br-srv.$DOM_NAME"
-EXPECTED_FQDNS["hqcli"]="hq-cli.$DOM_NAME"
+EXPECTED_FQDNS["hq_rtr"]="hq_rtr.$DOM_NAME"
+EXPECTED_FQDNS["br_rtr"]="br_rtr.$DOM_NAME"
+EXPECTED_FQDNS["hq_srv"]="hq_srv.$DOM_NAME"
+EXPECTED_FQDNS["br_srv"]="br_srv.$DOM_NAME"
+EXPECTED_FQDNS["hq_cli"]="hq_cli.$DOM_NAME"
 
 # === Блок: Определения ролей ВМ ===
 # shellcheck disable=SC2034
-declare -ag ALL_VM_ROLES=("ISP" "HQRTR" "BRRTR" "HQSRV" "BRSRV" "HQCLI") # Упорядоченный список всех ролей.
+declare -ag ALL_VM_ROLES=("ISP" "HQ_RTR" "BR_RTR" "HQ_SRV" "BR_SRV" "HQ_CLI") # Упорядоченный список всех ролей.
 # shellcheck disable=SC2034
 declare -A VM_ROLE_DESCS=(                        # Описания для каждой роли ВМ.
     ["ISP"]="Интернет-провайдер"
-    ["HQRTR"]="Маршрутизатор головного офиса"
-    ["BRRTR"]="Маршрутизатор филиала"
-    ["HQSRV"]="Сервер головного офиса"
-    ["BRSRV"]="Сервер филиала"
-    ["HQCLI"]="Клиентская машина головного офиса"
+    ["HQ_RTR"]="Маршрутизатор головного офиса"
+    ["BR_RTR"]="Маршрутизатор филиала"
+    ["HQ_SRV"]="Сервер головного офиса"
+    ["BR_SRV"]="Сервер филиала"
+    ["HQ_CLI"]="Клиентская машина головного офиса"
 )
 
 # === Блок: Параметры пользователей и аутентификации по умолчанию ===

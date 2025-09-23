@@ -1,16 +1,16 @@
 #!/bin/bash
-# Файл: fx_lib/default/hqcli/hqcli_m1_fx.sh
-# Содержит функции-шаги для роли HQCLI, Модуль 1, сценарий "default".
+# Файл: fx_lib/default/hq_cli/hq_cli_m1_fx.sh
+# Содержит функции-шаги для роли HQ_CLI, Модуль 1, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для HQCLI - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_CLI - Модуль 1 (Сценарий: default) ---
 
-# Функция: setup_hqcli_m1_hn
-# Назначение: Устанавливает имя хоста (FQDN) для ВМ HQCLI.
-setup_hqcli_m1_hn() {
-    local def_fqdn_val="${EXPECTED_FQDNS["hqcli"]}"
+# Функция: setup_hq_cli_m1_hn
+# Назначение: Устанавливает имя хоста (FQDN) для ВМ HQ_CLI.
+setup_hq_cli_m1_hn() {
+    local def_fqdn_val="${EXPECTED_FQDNS["hq_cli"]}"
     local target_fqdn_val
-    ask_param "FQDN для HQCLI" "$def_fqdn_val" "target_fqdn_val"
+    ask_param "FQDN для HQ_CLI" "$def_fqdn_val" "target_fqdn_val"
 
     log_msg "${P_ACTION} Установка имени хоста на: ${C_CYAN}$target_fqdn_val${C_RESET}..."
     if hostnamectl set-hostname "$target_fqdn_val"; then
@@ -24,16 +24,16 @@ setup_hqcli_m1_hn() {
     fi
 }
 
-# Функция: setup_hqcli_m1_tmp_static_ip
-# Назначение: Настраивает временный статический IP-адрес для HQCLI.
-setup_hqcli_m1_tmp_static_ip() {
-    local lan_iface_val; ask_param "LAN интерфейс HQCLI" "$m1_hqcli_lan_iface" "lan_iface_val"
-    local tmp_static_ip_val; ask_val_param "Временный статический IP HQCLI (CIDR)" "$m1_hqcli_tmp_static_ip" "is_ipcidr_valid" "tmp_static_ip_val"
-    local tmp_static_gw_val; ask_val_param "Временный статический шлюз HQCLI" "$m1_hqcli_tmp_static_gw" "is_ipcidr_valid" "tmp_static_gw_val"
+# Функция: setup_hq_cli_m1_tmp_static_ip
+# Назначение: Настраивает временный статический IP-адрес для HQ_CLI.
+setup_hq_cli_m1_tmp_static_ip() {
+    local lan_iface_val; ask_param "LAN интерфейс HQ_CLI" "$m1_hq_cli_lan_iface" "lan_iface_val"
+    local tmp_static_ip_val; ask_val_param "Временный статический IP HQ_CLI (CIDR)" "$m1_hq_cli_tmp_static_ip" "is_ipcidr_valid" "tmp_static_ip_val"
+    local tmp_static_gw_val; ask_val_param "Временный статический шлюз HQ_CLI" "$m1_hq_cli_tmp_static_gw" "is_ipcidr_valid" "tmp_static_gw_val"
     local tmp_dns1_val; ask_val_param "Основной DNS (временный)" "$DEF_DNS_PRIMARY" "is_ipcidr_valid" "tmp_dns1_val"
     local tmp_dns2_val; ask_val_param "Запасной DNS (временный)" "$DEF_DNS_SECONDARY" "is_ipcidr_valid" "tmp_dns2_val"
 
-    log_msg "${P_ACTION} Настройка временного статического IP для HQCLI..."
+    log_msg "${P_ACTION} Настройка временного статического IP для HQ_CLI..."
     mkdir -p "/etc/net/ifaces/${lan_iface_val}" && find "/etc/net/ifaces/${lan_iface_val}" -mindepth 1 -delete
     if ! {
         echo 'TYPE=eth' > "/etc/net/ifaces/${lan_iface_val}/options" &&
@@ -55,8 +55,8 @@ EOF
     return 0
 }
 
-# Функция: setup_hqcli_m1_net_restart_static_ip
-setup_hqcli_m1_net_restart_static_ip() {
+# Функция: setup_hq_cli_m1_net_restart_static_ip
+setup_hq_cli_m1_net_restart_static_ip() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения временного статического IP..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -70,9 +70,9 @@ setup_hqcli_m1_net_restart_static_ip() {
     fi
 }
 
-# Функция: setup_hqcli_m1_init_reboot_after_static_ip
-setup_hqcli_m1_init_reboot_after_static_ip() {
-    local vm_role_code="HQCLI"; local mod_num_val="1"
+# Функция: setup_hq_cli_m1_init_reboot_after_static_ip
+setup_hq_cli_m1_init_reboot_after_static_ip() {
+    local vm_role_code="HQ_CLI"; local mod_num_val="1"
     local flag_reboot_initiated_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_reboot_initiated.flag"
     
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ВНИМАНИЕ: Машина будет перезагружена для корректного применения сетевых настроек.${C_RESET}"
@@ -83,7 +83,7 @@ setup_hqcli_m1_init_reboot_after_static_ip() {
     log_msg "${P_INFO} Инициирую перезагрузку через 5 секунд..."
     sleep 5
     touch "$flag_reboot_initiated_val"
-    reg_sneaky_cmd "reboot # Инициирована перезагрузка HQCLI"
+    reg_sneaky_cmd "reboot # Инициирована перезагрузка HQ_CLI"
 
     if reboot; then
         return 2 
@@ -94,24 +94,24 @@ setup_hqcli_m1_init_reboot_after_static_ip() {
     fi
 }
 
-# Функция: setup_hqcli_m1_dhcp_cli_cfg
-setup_hqcli_m1_dhcp_cli_cfg() {
-    local vm_role_code="HQCLI"; local mod_num_val="1"
-    local flag_reboot_marker_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_hqcli_m1_init_reboot_after_static_ip_reboot_initiated.flag"
+# Функция: setup_hq_cli_m1_dhcp_cli_cfg
+setup_hq_cli_m1_dhcp_cli_cfg() {
+    local vm_role_code="HQ_CLI"; local mod_num_val="1"
+    local flag_reboot_marker_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_hq_cli_m1_init_reboot_after_static_ip_reboot_initiated.flag"
     if [[ ! -f "$flag_reboot_marker_prev_step_val" ]]; then
         log_msg "${P_WARN} Предыдущий шаг (инициация перезагрузки) не был завершен штатно или его флаг отсутствует."
         log_msg "${P_WARN} Продолжение настройки DHCP может быть некорректным, если статический IP не был применен."
         pause_pmt "Нажмите Enter, если уверены, что хотите продолжить."
     fi
 
-    log_msg "${P_ACTION} Настройка HQCLI на получение IP-адреса по DHCP..."
+    log_msg "${P_ACTION} Настройка HQ_CLI на получение IP-адреса по DHCP..."
     if ! ensure_pkgs "dhcpcd" "dhcpcd"; then
         log_msg "${P_ERROR} Пакет dhcpcd не установлен."
         return 1
     fi
 
-    local lan_iface_val; ask_param "LAN интерфейс HQCLI (для DHCP)" "$m1_hqcli_lan_iface" "lan_iface_val"
-    local cli_id_val; ask_param "Client ID для DHCP (должен совпадать с резервацией на HQRTR)" "$m1_hqcli_dhcp_cli_id_def" "cli_id_val"
+    local lan_iface_val; ask_param "LAN интерфейс HQ_CLI (для DHCP)" "$m1_hq_cli_lan_iface" "lan_iface_val"
+    local cli_id_val; ask_param "Client ID для DHCP (должен совпадать с резервацией на HQ_RTR)" "$m1_hq_cli_dhcp_cli_id_def" "cli_id_val"
 
     mkdir -p "/etc/net/ifaces/${lan_iface_val}" && find "/etc/net/ifaces/${lan_iface_val}" -mindepth 1 -delete
     if ! cat <<EOF > "/etc/net/ifaces/${lan_iface_val}/options"
@@ -141,15 +141,15 @@ EOF
     return 0
 }
 
-# Функция: setup_hqcli_m1_net_restart_dhcp
-setup_hqcli_m1_net_restart_dhcp() {
+# Функция: setup_hq_cli_m1_net_restart_dhcp
+setup_hq_cli_m1_net_restart_dhcp() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для получения IP по DHCP..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
         log_msg "${P_INFO} ${C_DIM}Ожидание 10 секунд для получения адреса по DHCP...${C_RESET}"
         sleep 10
-        log_msg "${P_INFO} Текущий IP-адрес интерфейса ${C_CYAN}$m1_hqcli_lan_iface${C_RESET} (ip addr show $m1_hqcli_lan_iface):"
-        ip addr show "$m1_hqcli_lan_iface" | log_msg - "/dev/tty"
+        log_msg "${P_INFO} Текущий IP-адрес интерфейса ${C_CYAN}$m1_hq_cli_lan_iface${C_RESET} (ip addr show $m1_hq_cli_lan_iface):"
+        ip addr show "$m1_hq_cli_lan_iface" | log_msg - "/dev/tty"
         reg_sneaky_cmd "systemctl restart network"
         return 0
     else
@@ -158,10 +158,10 @@ setup_hqcli_m1_net_restart_dhcp() {
     fi
 }
 
-# Функция: setup_hqcli_m1_dns_cli_final
-setup_hqcli_m1_dns_cli_final() {
-    log_msg "${P_ACTION} Финальная настройка DNS-клиента для HQCLI (через resolvconf)..."
-    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на HQCLI"
+# Функция: setup_hq_cli_m1_dns_cli_final
+setup_hq_cli_m1_dns_cli_final() {
+    log_msg "${P_ACTION} Финальная настройка DNS-клиента для HQ_CLI (через resolvconf)..."
+    set_cfg_val "/etc/resolvconf.conf" "resolv_conf_local_only" "NO" "# Разрешить resolvconf обновлять /etc/resolv.conf на HQ_CLI"
     log_msg "${P_OK} Файл /etc/resolvconf.conf настроен."
     reg_sneaky_cmd "set_cfg_val /etc/resolvconf.conf resolv_conf_local_only NO"
 
@@ -177,9 +177,9 @@ setup_hqcli_m1_dns_cli_final() {
     return 0
 }
 
-# Функция: setup_hqcli_m1_tz
-setup_hqcli_m1_tz() {
-    log_msg "${P_ACTION} Настройка часового пояса для HQCLI..."
+# Функция: setup_hq_cli_m1_tz
+setup_hq_cli_m1_tz() {
+    log_msg "${P_ACTION} Настройка часового пояса для HQ_CLI..."
     if ! command -v timedatectl &>/dev/null; then log_msg "${P_ERROR} timedatectl не найден."; return 1; fi
     if ! (apt-get update -y && apt-get install -y tzdata); then log_msg "${P_ERROR} Ошибка установки tzdata."; return 1; fi
     log_msg "${P_OK} Пакет tzdata установлен/обновлен."
@@ -199,4 +199,4 @@ setup_hqcli_m1_tz() {
     fi
 }
 
-# --- Мета-комментарий: Функции-шаги для HQCLI - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_CLI - Модуль 1 (Сценарий: default) ---

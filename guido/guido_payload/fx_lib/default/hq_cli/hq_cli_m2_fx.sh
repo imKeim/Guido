@@ -1,22 +1,22 @@
 #!/bin/bash
-# Файл: fx_lib/default/hqcli/hqcli_m2_fx.sh
-# Содержит функции-шаги для роли HQCLI, Модуль 2, сценарий "default".
+# Файл: fx_lib/default/hq_cli/hq_cli_m2_fx.sh
+# Содержит функции-шаги для роли HQ_CLI, Модуль 2, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для HQCLI - Модуль 2 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_CLI - Модуль 2 (Сценарий: default) ---
 
-# Функция: setup_hqcli_m2_yabrowser_inst_bg
+# Функция: setup_hq_cli_m2_yabrowser_inst_bg
 # Назначение: Запускает установку Яндекс.Браузера в фоновом режиме.
-setup_hqcli_m2_yabrowser_inst_bg() {
-    local vm_role_code="HQCLI"; local mod_num_val="2"
+setup_hq_cli_m2_yabrowser_inst_bg() {
+    local vm_role_code="HQ_CLI"; local mod_num_val="2"
     local step_name_for_flags_val="${FUNCNAME[0]}"
     local flag_bg_proc_started_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${step_name_for_flags_val}_bg_started.flag"
     local flag_inst_done_by_bg_proc_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${step_name_for_flags_val}_done.flag"
 
-    log_msg "${P_ACTION} Установка Яндекс.Браузера на HQCLI (фоновый режим)..."
+    log_msg "${P_ACTION} Установка Яндекс.Браузера на HQ_CLI (фоновый режим)..."
     
-    if rpm -q "$m2_hqcli_yabrowser_pkg_name" &>/dev/null; then
-        log_msg "${P_OK} Яндекс.Браузер (${C_CYAN}$m2_hqcli_yabrowser_pkg_name${C_GREEN}) уже установлен."
+    if rpm -q "$m2_hq_cli_yabrowser_pkg_name" &>/dev/null; then
+        log_msg "${P_OK} Яндекс.Браузер (${C_CYAN}$m2_hq_cli_yabrowser_pkg_name${C_GREEN}) уже установлен."
         touch "$flag_inst_done_by_bg_proc_val"
         rm -f "$flag_bg_proc_started_val"
         return 0
@@ -27,12 +27,12 @@ setup_hqcli_m2_yabrowser_inst_bg() {
         return 0
     fi
 
-    log_msg "${P_INFO} Обновление пакетного менеджера epm и запуск установки пакета ${C_CYAN}$m2_hqcli_yabrowser_pkg_name${C_RESET} в фоновом режиме..."
+    log_msg "${P_INFO} Обновление пакетного менеджера epm и запуск установки пакета ${C_CYAN}$m2_hq_cli_yabrowser_pkg_name${C_RESET} в фоновом режиме..."
     log_msg "${P_INFO} ${C_DIM}Это может занять некоторое время. Скрипт продолжит выполнение других шагов.${C_RESET}"
     
     (
         epm update -y && \
-        epm -y install "$m2_hqcli_yabrowser_pkg_name" && \
+        epm -y install "$m2_hq_cli_yabrowser_pkg_name" && \
         touch "$flag_inst_done_by_bg_proc_val" && \
         rm -f "$flag_bg_proc_started_val" && \
         echo -e "\n$(date '+%Y-%m-%d %H:%M:%S') - [INFO][Guido BG] Фоновая установка Яндекс.Браузера успешно завершена." > /dev/tty
@@ -42,7 +42,7 @@ setup_hqcli_m2_yabrowser_inst_bg() {
     if jobs -p | grep -q "^${bg_proc_pid_val}$"; then
         log_msg "${P_OK} Установка Яндекс.Браузера успешно запущена в фоновом режиме (PID: ${C_CYAN}$bg_proc_pid_val${C_RESET})."
         touch "$flag_bg_proc_started_val"
-        reg_sneaky_cmd "epm -y install $m2_hqcli_yabrowser_pkg_name & # (фоновая установка)"
+        reg_sneaky_cmd "epm -y install $m2_hq_cli_yabrowser_pkg_name & # (фоновая установка)"
         return 0
     else
         log_msg "${P_ERROR} Не удалось запустить установку Яндекс.Браузера в фоновом режиме."
@@ -50,21 +50,21 @@ setup_hqcli_m2_yabrowser_inst_bg() {
     fi
 }
 
-# Функция: setup_hqcli_m2_ntp_cli
-# Назначение: Настраивает HQCLI как NTP-клиента.
-setup_hqcli_m2_ntp_cli() {
-    log_msg "${P_ACTION} Настройка NTP-клиента (chrony) на HQCLI..."
+# Функция: setup_hq_cli_m2_ntp_cli
+# Назначение: Настраивает HQ_CLI как NTP-клиента.
+setup_hq_cli_m2_ntp_cli() {
+    log_msg "${P_ACTION} Настройка NTP-клиента (chrony) на HQ_CLI..."
     if ! ensure_pkgs "chronyc" "chrony"; then
         log_msg "${P_ERROR} Пакет chrony не установлен."
         return 1
     fi
 
-    local ntp_srv_ip_def_val; ntp_srv_ip_def_val=$(get_ip_only "$m1_hqrtr_vlan_cli_ip")
-    local ntp_srv_ip_val; ask_val_param "IP-адрес NTP-сервера (IP HQRTR в VLAN клиентов)" "$ntp_srv_ip_def_val" "is_ipcidr_valid" "ntp_srv_ip_val"
+    local ntp_srv_ip_def_val; ntp_srv_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_cli_ip")
+    local ntp_srv_ip_val; ask_val_param "IP-адрес NTP-сервера (IP HQ_RTR в VLAN клиентов)" "$ntp_srv_ip_def_val" "is_ipcidr_valid" "ntp_srv_ip_val"
     ntp_srv_ip_val=$(get_ip_only "$ntp_srv_ip_val")
 
     if ! cat <<EOF > /etc/chrony.conf
-# Конфигурация NTP-клиента chrony для HQCLI
+# Конфигурация NTP-клиента chrony для HQ_CLI
 server ${ntp_srv_ip_val} iburst
 driftfile /var/lib/chrony/drift
 makestep 1.0 3
@@ -88,10 +88,10 @@ EOF
     fi
 }
 
-# Функция: setup_hqcli_m2_ssh_srv_en
-# Назначение: Включает SSH-сервер на HQCLI.
-setup_hqcli_m2_ssh_srv_en() {
-    log_msg "${P_ACTION} Включение SSH-сервера на HQCLI..."
+# Функция: setup_hq_cli_m2_ssh_srv_en
+# Назначение: Включает SSH-сервер на HQ_CLI.
+setup_hq_cli_m2_ssh_srv_en() {
+    log_msg "${P_ACTION} Включение SSH-сервера на HQ_CLI..."
     if ! ensure_pkgs "sshd" "openssh-server"; then
         log_msg "${P_ERROR} Пакет openssh-server не установлен и не может быть установлен."
         return 1
@@ -113,19 +113,19 @@ setup_hqcli_m2_ssh_srv_en() {
     return 0
 }
 
-# Функция: setup_hqcli_m2_samba_ad_join
-# Назначение: Вводит HQCLI в домен Active Directory.
-setup_hqcli_m2_samba_ad_join() {
-    log_msg "${P_ACTION} Ввод HQCLI в домен Active Directory..."
+# Функция: setup_hq_cli_m2_samba_ad_join
+# Назначение: Вводит HQ_CLI в домен Active Directory.
+setup_hq_cli_m2_samba_ad_join() {
+    log_msg "${P_ACTION} Ввод HQ_CLI в домен Active Directory..."
     if ! ensure_pkgs "system-auth realm" "task-auth-ad-sssd realmd krb5-workstation sssd-ad sssd-tools"; then
         log_msg "${P_ERROR} Не удалось установить все необходимые пакеты для ввода в домен AD."
         return 1
     fi
 
-    local ad_realm_upper_val; ask_param "Kerberos Realm домена AD" "$m2_brsrv_samba_realm_upper" "ad_realm_upper_val"
-    local ad_dom_netbios_val; ask_param "NetBIOS имя домена AD" "$m2_brsrv_samba_domain_netbios" "ad_dom_netbios_val"
-    local ad_admin_user_val; ask_param "Имя администратора домена AD" "$m2_hqcli_samba_admin_user" "ad_admin_user_val"
-    local ad_admin_pass_val; ask_param "Пароль администратора домена AD ('${ad_admin_user_val}')" "$m2_brsrv_samba_admin_pass_def" "ad_admin_pass_val"
+    local ad_realm_upper_val; ask_param "Kerberos Realm домена AD" "$m2_br_srv_samba_realm_upper" "ad_realm_upper_val"
+    local ad_dom_netbios_val; ask_param "NetBIOS имя домена AD" "$m2_br_srv_samba_domain_netbios" "ad_dom_netbios_val"
+    local ad_admin_user_val; ask_param "Имя администратора домена AD" "$m2_hq_cli_samba_admin_user" "ad_admin_user_val"
+    local ad_admin_pass_val; ask_param "Пароль администратора домена AD ('${ad_admin_user_val}')" "$m2_br_srv_samba_admin_pass_def" "ad_admin_pass_val"
     local hqcli_short_hn_val="hq-cli"
 
     log_msg "${P_INFO} Принудительная синхронизация времени с NTP-сервером (chronyc burst)..."
@@ -144,7 +144,7 @@ setup_hqcli_m2_samba_ad_join() {
         
         log_msg "${P_INFO} Проверка статуса домена командой 'realm list'..."
         if realm list | grep -qi "$ad_realm_upper_val"; then
-            log_msg "${P_OK} Машина HQCLI успешно введена в домен ${C_GREEN}$ad_realm_upper_val${C_RESET}."
+            log_msg "${P_OK} Машина HQ_CLI успешно введена в домен ${C_GREEN}$ad_realm_upper_val${C_RESET}."
             return 0
         else
             log_msg "${P_ERROR} Команда 'realm list' не показывает, что машина находится в домене ${C_BOLD_RED}$ad_realm_upper_val${P_ERROR}."
@@ -156,10 +156,10 @@ setup_hqcli_m2_samba_ad_join() {
     fi
 }
 
-# Функция: setup_hqcli_m2_init_reboot_after_ad_join
-# Назначение: Инициирует перезагрузку HQCLI после ввода в домен.
-setup_hqcli_m2_init_reboot_after_ad_join() {
-    local vm_role_code="HQCLI"; local mod_num_val="2"
+# Функция: setup_hq_cli_m2_init_reboot_after_ad_join
+# Назначение: Инициирует перезагрузку HQ_CLI после ввода в домен.
+setup_hq_cli_m2_init_reboot_after_ad_join() {
+    local vm_role_code="HQ_CLI"; local mod_num_val="2"
     local flag_reboot_initiated_ad_join_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_reboot_initiated.flag"
     
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ВНИМАНИЕ: Машина будет перезагружена для полного применения настроек Active Directory.${C_RESET}"
@@ -169,7 +169,7 @@ setup_hqcli_m2_init_reboot_after_ad_join() {
     log_msg "${P_INFO} Инициирую перезагрузку через 5 секунд..."
     sleep 5
     touch "$flag_reboot_initiated_ad_join_val"
-    reg_sneaky_cmd "reboot # Инициирована перезагрузка HQCLI после ввода в домен"
+    reg_sneaky_cmd "reboot # Инициирована перезагрузка HQ_CLI после ввода в домен"
 
     if reboot; then
         return 2 
@@ -180,19 +180,19 @@ setup_hqcli_m2_init_reboot_after_ad_join() {
     fi
 }
 
-# Функция: setup_hqcli_m2_create_domain_user_homedirs
+# Функция: setup_hq_cli_m2_create_domain_user_homedirs
 # Назначение: Создает домашние каталоги для доменных пользователей.
-setup_hqcli_m2_create_domain_user_homedirs() {
-    local vm_role_code="HQCLI"; local mod_num_val="2"
-    local flag_reboot_marker_ad_join_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_hqcli_m2_init_reboot_after_ad_join_reboot_initiated.flag"
+setup_hq_cli_m2_create_domain_user_homedirs() {
+    local vm_role_code="HQ_CLI"; local mod_num_val="2"
+    local flag_reboot_marker_ad_join_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_hq_cli_m2_init_reboot_after_ad_join_reboot_initiated.flag"
     if [[ ! -f "$flag_reboot_marker_ad_join_val" ]]; then
         log_msg "${P_WARN} Предыдущий шаг (перезагрузка после ввода в домен) не был завершен штатно или его флаг отсутствует."
         pause_pmt "Нажмите Enter, если уверены, что хотите продолжить."
     fi
 
-    log_msg "${P_ACTION} Создание домашних каталогов для доменных пользователей на HQCLI..."
+    log_msg "${P_ACTION} Создание домашних каталогов для доменных пользователей на HQ_CLI..."
     
-    local ad_realm_upper_homedir_val="$m2_brsrv_samba_realm_upper"
+    local ad_realm_upper_homedir_val="$m2_br_srv_samba_realm_upper"
     local base_home_dir_val="/home/${ad_realm_upper_homedir_val,,}"
     local skel_dir_val="/etc/skel"
 
@@ -246,13 +246,13 @@ setup_hqcli_m2_create_domain_user_homedirs() {
     return 0
 }
 
-# Функция: setup_hqcli_m2_sudo_for_domain_group
+# Функция: setup_hq_cli_m2_sudo_for_domain_group
 # Назначение: Настраивает права sudo для доменной группы 'hq'.
-setup_hqcli_m2_sudo_for_domain_group() {
-    log_msg "${P_ACTION} Настройка прав sudo для доменной группы '${C_CYAN}$m2_hqcli_sudo_group_name${C_RESET}' на HQCLI..."
+setup_hq_cli_m2_sudo_for_domain_group() {
+    log_msg "${P_ACTION} Настройка прав sudo для доменной группы '${C_CYAN}$m2_hq_cli_sudo_group_name${C_RESET}' на HQ_CLI..."
     
-    local dom_group_name_val="$m2_hqcli_sudo_group_name"
-    local allowed_sudo_cmds_val="$m2_hqcli_sudo_allowed_cmds"
+    local dom_group_name_val="$m2_hq_cli_sudo_group_name"
+    local allowed_sudo_cmds_val="$m2_hq_cli_sudo_allowed_cmds"
     local sudoers_cfg_file_pth_val="/etc/sudoers.d/${dom_group_name_val}"
 
     if command -v control &>/dev/null && control sudo public &>/dev/null; then
@@ -282,21 +282,21 @@ setup_hqcli_m2_sudo_for_domain_group() {
     fi
 }
 
-# Функция: setup_hqcli_m2_nfs_cli_mount
-# Назначение: Настраивает HQCLI как NFS-клиента.
-setup_hqcli_m2_nfs_cli_mount() {
-    log_msg "${P_ACTION} Настройка NFS-клиента и монтирование общего ресурса на HQCLI..."
+# Функция: setup_hq_cli_m2_nfs_cli_mount
+# Назначение: Настраивает HQ_CLI как NFS-клиента.
+setup_hq_cli_m2_nfs_cli_mount() {
+    log_msg "${P_ACTION} Настройка NFS-клиента и монтирование общего ресурса на HQ_CLI..."
     if ! ensure_pkgs "mount.nfs" "nfs-utils"; then
         log_msg "${P_ERROR} Пакет nfs-utils (или эквивалент) не установлен."
         return 1
     fi
 
-    local nfs_srv_ip_val; nfs_srv_ip_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local raid_level_on_srv_val; ask_val_param "Уровень RAID, используемый на HQSRV (для пути к NFS)" "$m2_hqsrv_raid_level_def" "is_not_empty_valid" "raid_level_on_srv_val"
-    local remote_nfs_share_pth_def_val="${m2_hqsrv_raid_mount_point_base}${raid_level_on_srv_val}/${m2_hqsrv_nfs_export_subdir}"
-    local local_nfs_mount_point_val; ask_param "Локальная точка монтирования для NFS" "$m2_hqcli_nfs_mount_point" "local_nfs_mount_point_val"
+    local nfs_srv_ip_val; nfs_srv_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local raid_level_on_srv_val; ask_val_param "Уровень RAID, используемый на HQ_SRV (для пути к NFS)" "$m2_hq_srv_raid_level_def" "is_not_empty_valid" "raid_level_on_srv_val"
+    local remote_nfs_share_pth_def_val="${m2_hq_srv_raid_mount_point_base}${raid_level_on_srv_val}/${m2_hq_srv_nfs_export_subdir}"
+    local local_nfs_mount_point_val; ask_param "Локальная точка монтирования для NFS" "$m2_hq_cli_nfs_mount_point" "local_nfs_mount_point_val"
 
-    ask_val_param "IP-адрес NFS-сервера (HQSRV)" "$nfs_srv_ip_val" "is_ipcidr_valid" "nfs_srv_ip_val"
+    ask_val_param "IP-адрес NFS-сервера (HQ_SRV)" "$nfs_srv_ip_val" "is_ipcidr_valid" "nfs_srv_ip_val"
     nfs_srv_ip_val=$(get_ip_only "$nfs_srv_ip_val")
     local remote_nfs_share_pth_val; ask_param "Полный путь к удаленному NFS-ресурсу на сервере" "$remote_nfs_share_pth_def_val" "remote_nfs_share_pth_val"
     
@@ -330,15 +330,15 @@ setup_hqcli_m2_nfs_cli_mount() {
     fi
 }
 
-# Функция: setup_hqcli_m2_wait_yabrowser_inst
+# Функция: setup_hq_cli_m2_wait_yabrowser_inst
 # Назначение: Ожидает завершения фоновой установки Яндекс.Браузера.
-setup_hqcli_m2_wait_yabrowser_inst() {
-    local vm_role_code="HQCLI"; local mod_num_val="2"
-    local bg_inst_step_name_val="setup_hqcli_m2_yabrowser_inst_bg"
+setup_hq_cli_m2_wait_yabrowser_inst() {
+    local vm_role_code="HQ_CLI"; local mod_num_val="2"
+    local bg_inst_step_name_val="setup_hq_cli_m2_yabrowser_inst_bg"
     local flag_bg_proc_has_started_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${bg_inst_step_name_val}_bg_started.flag"
     local flag_bg_inst_is_done_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${bg_inst_step_name_val}_done.flag"
 
-    log_msg "${P_ACTION} Ожидание завершения установки Яндекс.Браузера на HQCLI..."
+    log_msg "${P_ACTION} Ожидание завершения установки Яндекс.Браузера на HQ_CLI..."
 
     if [[ -f "$flag_bg_inst_is_done_val" ]]; then
         log_msg "${P_OK} Установка Яндекс.Браузера уже была отмечена как завершенная."
@@ -347,9 +347,9 @@ setup_hqcli_m2_wait_yabrowser_inst() {
 
     if [[ ! -f "$flag_bg_proc_has_started_val" ]]; then
         log_msg "${P_WARN} Фоновая установка Яндекс.Браузера не была запущена."
-        log_msg "${P_INFO} Проверка, установлен ли пакет ${C_CYAN}$m2_hqcli_yabrowser_pkg_name${C_RESET} вручную..."
-        if rpm -q "$m2_hqcli_yabrowser_pkg_name" &>/dev/null; then
-            log_msg "${P_OK} Яндекс.Браузер (${C_CYAN}$m2_hqcli_yabrowser_pkg_name${C_GREEN}) уже установлен."
+        log_msg "${P_INFO} Проверка, установлен ли пакет ${C_CYAN}$m2_hq_cli_yabrowser_pkg_name${C_RESET} вручную..."
+        if rpm -q "$m2_hq_cli_yabrowser_pkg_name" &>/dev/null; then
+            log_msg "${P_OK} Яндекс.Браузер (${C_CYAN}$m2_hq_cli_yabrowser_pkg_name${C_GREEN}) уже установлен."
             touch "$flag_bg_inst_is_done_val"
             return 0
         else
@@ -381,9 +381,9 @@ setup_hqcli_m2_wait_yabrowser_inst() {
         return 1
     else
         log_msg "${P_WARN} Фоновый процесс установки Яндекс.Браузера, похоже, завершился, но флаг успеха не был установлен."
-        log_msg "${P_INFO} Повторная проверка пакета ${C_CYAN}$m2_hqcli_yabrowser_pkg_name${C_RESET}..."
-        if rpm -q "$m2_hqcli_yabrowser_pkg_name" &>/dev/null; then
-            log_msg "${P_OK} Яндекс.Браузер (${C_CYAN}$m2_hqcli_yabrowser_pkg_name${C_GREEN}) все же установлен."
+        log_msg "${P_INFO} Повторная проверка пакета ${C_CYAN}$m2_hq_cli_yabrowser_pkg_name${C_RESET}..."
+        if rpm -q "$m2_hq_cli_yabrowser_pkg_name" &>/dev/null; then
+            log_msg "${P_OK} Яндекс.Браузер (${C_CYAN}$m2_hq_cli_yabrowser_pkg_name${C_GREEN}) все же установлен."
             touch "$flag_bg_inst_is_done_val"
             return 0
         else
@@ -393,38 +393,38 @@ setup_hqcli_m2_wait_yabrowser_inst() {
     fi
 }
 
-# Функция: setup_hqcli_m2_copy_localsettings_to_brsrv_pmt
-# Назначение: Информирует о необходимости скопировать LocalSettings.php на BRSRV.
-setup_hqcli_m2_copy_localsettings_to_brsrv_pmt() {
-    log_msg "${P_ACTION} Копирование LocalSettings.php с HQCLI на BRSRV..."
+# Функция: setup_hq_cli_m2_copy_localsettings_to_br_srv_pmt
+# Назначение: Информирует о необходимости скопировать LocalSettings.php на BR_SRV.
+setup_hq_cli_m2_copy_localsettings_to_br_srv_pmt() {
+    log_msg "${P_ACTION} Копирование LocalSettings.php с HQ_CLI на BR_SRV..."
     
-    local localsettings_pth_on_hqcli_def_val="$m2_hqcli_localsettings_download_pth_def"
-    local localsettings_pth_on_hqcli_val; ask_param "Полный путь к файлу LocalSettings.php на HQCLI" "$localsettings_pth_on_hqcli_def_val" "localsettings_pth_on_hqcli_val"
+    local localsettings_pth_on_hqcli_def_val="$m2_hq_cli_localsettings_download_pth_def"
+    local localsettings_pth_on_hqcli_val; ask_param "Полный путь к файлу LocalSettings.php на HQ_CLI" "$localsettings_pth_on_hqcli_def_val" "localsettings_pth_on_hqcli_val"
 
     if [[ ! -f "$localsettings_pth_on_hqcli_val" ]]; then
-        log_msg "${P_WARN} Файл '${C_YELLOW}$localsettings_pth_on_hqcli_val${P_WARN}' не найден на HQCLI. Пропуск."
+        log_msg "${P_WARN} Файл '${C_YELLOW}$localsettings_pth_on_hqcli_val${P_WARN}' не найден на HQ_CLI. Пропуск."
         return 0
     fi
 
-    local brsrv_target_ip_val; brsrv_target_ip_val=$(get_ip_only "$m1_brsrv_lan_ip")
+    local brsrv_target_ip_val; brsrv_target_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
     local brsrv_target_ssh_port_val="$DEF_SSH_PORT"
     local brsrv_target_user_val="sshuser"
-    local brsrv_target_pth_for_ls_val="$m2_brsrv_wiki_localsettings_pth_on_brsrv"
+    local brsrv_target_pth_for_ls_val="$m2_br_srv_wiki_localsettings_pth_on_brsrv"
 
     log_msg "${P_INFO} Попытка скопировать файл '${C_CYAN}$localsettings_pth_on_hqcli_val${C_RESET}'"
     log_msg "${P_INFO} на ${C_CYAN}${brsrv_target_user_val}@${brsrv_target_ip_val}:${brsrv_target_pth_for_ls_val}${C_RESET} (порт ${C_CYAN}$brsrv_target_ssh_port_val${C_RESET})."
-    log_msg "${P_ACTION} ${C_BOLD_YELLOW}Может потребоваться ввести пароль для пользователя '${C_CYAN}$brsrv_target_user_val${C_RESET}' на BRSRV (пароль по умолчанию: ${C_YELLOW}$DEF_SSHUSER_PASS${C_YELLOW}).${C_RESET}"
+    log_msg "${P_ACTION} ${C_BOLD_YELLOW}Может потребоваться ввести пароль для пользователя '${C_CYAN}$brsrv_target_user_val${C_RESET}' на BR_SRV (пароль по умолчанию: ${C_YELLOW}$DEF_SSHUSER_PASS${C_YELLOW}).${C_RESET}"
     
     if scp -P "$brsrv_target_ssh_port_val" "$localsettings_pth_on_hqcli_val" "${brsrv_target_user_val}@${brsrv_target_ip_val}:${brsrv_target_pth_for_ls_val}"; then
-        log_msg "${P_OK} Файл LocalSettings.php успешно скопирован на BRSRV."
-        log_msg "${P_ACTION} ${C_BOLD_MAGENTA}Не забудьте перезапустить скрипт на BRSRV (шаг 'Apply LocalSettings'), чтобы изменения вступили в силу!${C_RESET}"
+        log_msg "${P_OK} Файл LocalSettings.php успешно скопирован на BR_SRV."
+        log_msg "${P_ACTION} ${C_BOLD_MAGENTA}Не забудьте перезапустить скрипт на BR_SRV (шаг 'Apply LocalSettings'), чтобы изменения вступили в силу!${C_RESET}"
         reg_sneaky_cmd "scp -P $brsrv_target_ssh_port_val $localsettings_pth_on_hqcli_val ${brsrv_target_user_val}@${brsrv_target_ip_val}:${brsrv_target_pth_for_ls_val}"
         return 0
     else
-        log_msg "${P_ERROR} Ошибка при копировании файла LocalSettings.php на BRSRV."
-        log_msg "${P_ERROR} Пожалуйста, скопируйте файл вручную и затем продолжите настройку на BRSRV."
+        log_msg "${P_ERROR} Ошибка при копировании файла LocalSettings.php на BR_SRV."
+        log_msg "${P_ERROR} Пожалуйста, скопируйте файл вручную и затем продолжите настройку на BR_SRV."
         return 1
     fi
 }
 
-# --- Мета-комментарий: Функции-шаги для HQCLI - Модуль 2 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_CLI - Модуль 2 (Сценарий: default) ---

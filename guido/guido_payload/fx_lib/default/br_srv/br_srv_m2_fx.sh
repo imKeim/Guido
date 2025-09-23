@@ -1,25 +1,25 @@
 #!/bin/bash
-# Файл: fx_lib/default/brsrv/brsrv_m2_fx.sh
-# Содержит функции-шаги для роли BRSRV, Модуль 2, сценарий "default".
+# Файл: fx_lib/default/br_srv/br_srv_m2_fx.sh
+# Содержит функции-шаги для роли BR_SRV, Модуль 2, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для BRSRV - Модуль 2 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для BR_SRV - Модуль 2 (Сценарий: default) ---
 
-# Функция: setup_brsrv_m2_ntp_cli
-# Назначение: Настраивает BRSRV как NTP-клиента.
-setup_brsrv_m2_ntp_cli() {
-    log_msg "${P_ACTION} Настройка NTP-клиента (chrony) на BRSRV..."
+# Функция: setup_br_srv_m2_ntp_cli
+# Назначение: Настраивает BR_SRV как NTP-клиента.
+setup_br_srv_m2_ntp_cli() {
+    log_msg "${P_ACTION} Настройка NTP-клиента (chrony) на BR_SRV..."
     if ! ensure_pkgs "chronyc" "chrony"; then
         log_msg "${P_ERROR} Пакет chrony не установлен."
         return 1
     fi
 
-    local ntp_srv_ip_def_val; ntp_srv_ip_def_val=$(get_ip_only "$m1_hqrtr_gre_tunnel_ip")
-    local ntp_srv_ip_val; ask_val_param "IP-адрес NTP-сервера (IP HQRTR в GRE-туннеле)" "$ntp_srv_ip_def_val" "is_ipcidr_valid" "ntp_srv_ip_val"
+    local ntp_srv_ip_def_val; ntp_srv_ip_def_val=$(get_ip_only "$m1_hq_rtr_gre_tunnel_ip")
+    local ntp_srv_ip_val; ask_val_param "IP-адрес NTP-сервера (IP HQ_RTR в GRE-туннеле)" "$ntp_srv_ip_def_val" "is_ipcidr_valid" "ntp_srv_ip_val"
     ntp_srv_ip_val=$(get_ip_only "$ntp_srv_ip_val")
 
     if ! cat <<EOF > /etc/chrony.conf
-# Конфигурация NTP-клиента chrony для BRSRV
+# Конфигурация NTP-клиента chrony для BR_SRV
 server ${ntp_srv_ip_val} iburst
 driftfile /var/lib/chrony/drift
 makestep 1.0 3
@@ -43,16 +43,16 @@ EOF
     fi
 }
 
-# Функция: setup_brsrv_m2_ssh_srv_port_update
-# Назначение: Обновляет порт SSH-сервера на BRSRV.
-setup_brsrv_m2_ssh_srv_port_update() {
-    log_msg "${P_ACTION} Проверка и обновление порта SSH-сервера на BRSRV..."
+# Функция: setup_br_srv_m2_ssh_srv_port_update
+# Назначение: Обновляет порт SSH-сервера на BR_SRV.
+setup_br_srv_m2_ssh_srv_port_update() {
+    log_msg "${P_ACTION} Проверка и обновление порта SSH-сервера на BR_SRV..."
     if ! command -v sshd &>/dev/null; then
         log_msg "${P_ERROR} Команда sshd не найдена. OpenSSH-server не установлен?"
         return 1
     fi
 
-    local target_ssh_port_val; ask_val_param "Целевой порт SSH (должен совпадать с DNAT на BRRTR)" "$DEF_SSH_PORT" "is_port_valid" "target_ssh_port_val"
+    local target_ssh_port_val; ask_val_param "Целевой порт SSH (должен совпадать с DNAT на BR_RTR)" "$DEF_SSH_PORT" "is_port_valid" "target_ssh_port_val"
     local cur_ssh_port_val; cur_ssh_port_val=$(sshd -T 2>/dev/null | grep -i "^port " | awk '{print $2}' | head -n 1)
 
     if [[ -z "$cur_ssh_port_val" ]]; then
@@ -81,10 +81,10 @@ setup_brsrv_m2_ssh_srv_port_update() {
     fi
 }
 
-# Функция: setup_brsrv_m2_samba_dc_inst_provision
+# Функция: setup_br_srv_m2_samba_dc_inst_provision
 # Назначение: Установка и начальная настройка Samba AD DC.
-setup_brsrv_m2_samba_dc_inst_provision() {
-    log_msg "${P_ACTION} Установка и начальная настройка Samba AD DC на BRSRV..."
+setup_br_srv_m2_samba_dc_inst_provision() {
+    log_msg "${P_ACTION} Установка и начальная настройка Samba AD DC на BR_SRV..."
     
     local samba_dc_req_pkgs_val="samba samba-client task-samba-dc bind-utils"
     local samba_dc_check_cmds_val="samba-tool kinit"
@@ -109,11 +109,11 @@ setup_brsrv_m2_samba_dc_inst_provision() {
         reg_sneaky_cmd "mv /etc/samba/smb.conf /etc/samba/smb.conf.bak"
     fi
 
-    local samba_realm_upper_val; ask_param "Kerberos Realm (например, AU-TEAM.IRPO)" "$m2_brsrv_samba_realm_upper" "samba_realm_upper_val"
-    local samba_dom_netbios_val; ask_param "NetBIOS имя домена (например, AU-TEAM)" "$m2_brsrv_samba_domain_netbios" "samba_dom_netbios_val"
-    local samba_admin_pass_val; ask_param "Пароль для администратора домена Samba AD ('administrator')" "$m2_brsrv_samba_admin_pass_def" "samba_admin_pass_val"
-    local dns_fwd_def_val; dns_fwd_def_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local dns_fwd_val; ask_val_param "DNS-форвардер для Samba AD (IP-адрес HQSRV)" "$dns_fwd_def_val" "is_ipcidr_valid" "dns_fwd_val"
+    local samba_realm_upper_val; ask_param "Kerberos Realm (например, AU-TEAM.IRPO)" "$m2_br_srv_samba_realm_upper" "samba_realm_upper_val"
+    local samba_dom_netbios_val; ask_param "NetBIOS имя домена (например, AU-TEAM)" "$m2_br_srv_samba_domain_netbios" "samba_dom_netbios_val"
+    local samba_admin_pass_val; ask_param "Пароль для администратора домена Samba AD ('administrator')" "$m2_br_srv_samba_admin_pass_def" "samba_admin_pass_val"
+    local dns_fwd_def_val; dns_fwd_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local dns_fwd_val; ask_val_param "DNS-форвардер для Samba AD (IP-адрес HQ_SRV)" "$dns_fwd_def_val" "is_ipcidr_valid" "dns_fwd_val"
     dns_fwd_val=$(get_ip_only "$dns_fwd_val")
 
     if [ -f "/var/lib/samba/private/sam.ldb" ]; then
@@ -138,13 +138,13 @@ setup_brsrv_m2_samba_dc_inst_provision() {
     return 0
 }
 
-# Функция: setup_brsrv_m2_samba_dc_kerberos_dns_crontab
+# Функция: setup_br_srv_m2_samba_dc_kerberos_dns_crontab
 # Назначение: Настройка Kerberos, DNS-клиента и crontab для Samba AD DC.
-setup_brsrv_m2_samba_dc_kerberos_dns_crontab() {
+setup_br_srv_m2_samba_dc_kerberos_dns_crontab() {
     log_msg "${P_ACTION} Настройка Kerberos, DNS-клиента и crontab для Samba AD DC..."
     
-    local lan_iface_for_samba_dns_val="$m1_brsrv_lan_iface"
-    local samba_realm_lower_val; samba_realm_lower_val=$(echo "$m2_brsrv_samba_realm_upper" | tr '[:upper:]' '[:lower:]')
+    local lan_iface_for_samba_dns_val="$m1_br_srv_lan_iface"
+    local samba_realm_lower_val; samba_realm_lower_val=$(echo "$m2_br_srv_samba_realm_upper" | tr '[:upper:]' '[:lower:]')
 
     if \cp -f /var/lib/samba/private/krb5.conf /etc/krb5.conf; then
         log_msg "${P_OK} Файл /etc/krb5.conf скопирован из /var/lib/samba/private/krb5.conf."
@@ -197,14 +197,14 @@ EOF
     return 0
 }
 
-# Функция: setup_brsrv_m2_samba_dc_create_users_groups
+# Функция: setup_br_srv_m2_samba_dc_create_users_groups
 # Назначение: Создает тестовых пользователей и группу 'hq' в Samba AD.
-setup_brsrv_m2_samba_dc_create_users_groups() {
-    log_msg "${P_ACTION} Создание тестовых пользователей и групп в Samba AD на BRSRV..."
+setup_br_srv_m2_samba_dc_create_users_groups() {
+    log_msg "${P_ACTION} Создание тестовых пользователей и групп в Samba AD на BR_SRV..."
     
-    local samba_admin_pass_val; ask_param "Пароль администратора домена Samba AD (для kinit)" "$m2_brsrv_samba_admin_pass_def" "samba_admin_pass_val"
-    local user_hq_pass_val; ask_param "Пароль для создаваемых пользователей userX.hq" "$m2_brsrv_samba_user_hq_pass_def" "user_hq_pass_val"
-    local samba_realm_upper_kinit_val="$m2_brsrv_samba_realm_upper"
+    local samba_admin_pass_val; ask_param "Пароль администратора домена Samba AD (для kinit)" "$m2_br_srv_samba_admin_pass_def" "samba_admin_pass_val"
+    local user_hq_pass_val; ask_param "Пароль для создаваемых пользователей userX.hq" "$m2_br_srv_samba_user_hq_pass_def" "user_hq_pass_val"
+    local samba_realm_upper_kinit_val="$m2_br_srv_samba_realm_upper"
 
     log_msg "${P_INFO} Попытка получения Kerberos-тикета для administrator@${samba_realm_upper_kinit_val}..."
     if echo "$samba_admin_pass_val" | kinit "administrator@${samba_realm_upper_kinit_val}" &>/dev/null; then
@@ -256,12 +256,12 @@ setup_brsrv_m2_samba_dc_create_users_groups() {
     return 0
 }
 
-# Функция: setup_brsrv_m2_samba_dc_import_users_csv
+# Функция: setup_br_srv_m2_samba_dc_import_users_csv
 # Назначение: Импортирует пользователей в Samba AD из CSV-файла.
-setup_brsrv_m2_samba_dc_import_users_csv() {
-    log_msg "${P_ACTION} Импорт пользователей из CSV-файла в Samba AD на BRSRV..."
+setup_br_srv_m2_samba_dc_import_users_csv() {
+    log_msg "${P_ACTION} Импорт пользователей из CSV-файла в Samba AD на BR_SRV..."
     
-    local csv_def_pass_val; ask_param "Пароль по умолчанию для пользователей из CSV" "$m2_brsrv_samba_csv_user_pass_def" "csv_def_pass_val"
+    local csv_def_pass_val; ask_param "Пароль по умолчанию для пользователей из CSV" "$m2_br_srv_samba_csv_user_pass_def" "csv_def_pass_val"
     local csv_file_pth_val; ask_param "Полный путь к CSV-файлу с пользователями" "/opt/users.csv" "csv_file_pth_val"
 
     if [[ ! -f "$csv_file_pth_val" ]]; then
@@ -279,16 +279,16 @@ setup_brsrv_m2_samba_dc_import_users_csv() {
     fi
 }
 
-# Функция: setup_brsrv_m2_ansible_inst_ssh_key_gen
+# Функция: setup_br_srv_m2_ansible_inst_ssh_key_gen
 # Назначение: Устанавливает Ansible и генерирует SSH-ключ.
-setup_brsrv_m2_ansible_inst_ssh_key_gen() {
-    log_msg "${P_ACTION} Установка Ansible и генерация SSH-ключа на BRSRV..."
+setup_br_srv_m2_ansible_inst_ssh_key_gen() {
+    log_msg "${P_ACTION} Установка Ansible и генерация SSH-ключа на BR_SRV..."
     if ! ensure_pkgs "ansible ssh-keygen" "ansible openssh-clients"; then
         log_msg "${P_ERROR} Не удалось установить Ansible и/или openssh-clients."
         return 1
     fi
 
-    local ssh_key_pth_val="$m2_brsrv_ansible_ssh_key_pth"
+    local ssh_key_pth_val="$m2_br_srv_ansible_ssh_key_pth"
     
     if [[ -f "$ssh_key_pth_val" ]]; then
         log_msg "${P_INFO} SSH-ключ (${C_CYAN}$ssh_key_pth_val${C_RESET}) для Ansible уже существует."
@@ -304,64 +304,64 @@ setup_brsrv_m2_ansible_inst_ssh_key_gen() {
     return 0
 }
 
-# Функция: setup_brsrv_m2_ansible_ssh_copy_id_pmt
+# Функция: setup_br_srv_m2_ansible_ssh_copy_id_pmt
 # Назначение: Информирует о необходимости скопировать SSH-ключ Ansible.
-setup_brsrv_m2_ansible_ssh_copy_id_pmt() {
+setup_br_srv_m2_ansible_ssh_copy_id_pmt() {
     local vm_role_code="BRSRV"; local mod_num_val="2"
     local flag_manual_ssh_copy_pending_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_pending_manual.flag"
     
-    local ssh_pub_key_pth_val="${m2_brsrv_ansible_ssh_key_pth}.pub"
+    local ssh_pub_key_pth_val="${m2_br_srv_ansible_ssh_key_pth}.pub"
     
-    local hqsrv_target_ip_val; hqsrv_target_ip_val=$(get_ip_only "$m1_hqsrv_lan_ip")
+    local hqsrv_target_ip_val; hqsrv_target_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
     local hqsrv_target_ssh_port_val="$DEF_SSH_PORT"
-    local hqcli_target_ip_val; hqcli_target_ip_val=$(get_ip_only "$m1_hqcli_dhcp_reserved_ip_def")
-    local hqrtr_target_wan_ip_val; hqrtr_target_wan_ip_val=$(get_ip_only "$m1_hqrtr_wan_ip")
-    local brrtr_target_wan_ip_val; brrtr_target_wan_ip_val=$(get_ip_only "$m1_brrtr_wan_ip")
+    local hqcli_target_ip_val; hqcli_target_ip_val=$(get_ip_only "$m1_hq_cli_dhcp_reserved_ip_def")
+    local hqrtr_target_wan_ip_val; hqrtr_target_wan_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
+    local brrtr_target_wan_ip_val; brrtr_target_wan_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
 
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ТРЕБУЕТСЯ РУЧНОЕ ДЕЙСТВИЕ: Копирование публичного SSH-ключа Ansible${C_RESET}"
     log_msg "${P_ACTION}   Публичный ключ: ${C_CYAN}$ssh_pub_key_pth_val${C_RESET}"
     log_msg "${P_ACTION}   Используйте команду: ${C_CYAN}ssh-copy-id -i ${ssh_pub_key_pth_val} [опции_порта] пользователь@хост${C_RESET}"
     log_msg "${P_ACTION}   ${C_BOLD_YELLOW}Целевые хосты и пользователи:${C_RESET}"
-    log_msg "${P_ACTION}     1. HQSRV: ${C_CYAN}${m2_brsrv_ansible_hqsrv_user}@${hqsrv_target_ip_val} -p ${hqsrv_target_ssh_port_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_SSHUSER_PASS${C_RESET})"
-    log_msg "${P_ACTION}     2. HQCLI: ${C_CYAN}${m2_brsrv_ansible_hqcli_user}@${hqcli_target_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$m2_brsrv_ansible_hqcli_pass_def${C_RESET}) ${C_DIM}(SSH на HQCLI должен быть включен, и HQCLI должен быть в домене)${C_RESET}"
-    log_msg "${P_ACTION}     3. HQRTR: ${C_CYAN}${m2_brsrv_ansible_rtr_user}@${hqrtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
-    log_msg "${P_ACTION}     4. BRRTR: ${C_CYAN}${m2_brsrv_ansible_rtr_user}@${brrtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
+    log_msg "${P_ACTION}     1. HQ_SRV: ${C_CYAN}${m2_br_srv_ansible_hq_srv_user}@${hqsrv_target_ip_val} -p ${hqsrv_target_ssh_port_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_SSHUSER_PASS${C_RESET})"
+    log_msg "${P_ACTION}     2. HQ_CLI: ${C_CYAN}${m2_br_srv_ansible_hq_cli_user}@${hqcli_target_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$m2_br_srv_ansible_hq_cli_pass_def${C_RESET}) ${C_DIM}(SSH на HQ_CLI должен быть включен, и HQ_CLI должен быть в домене)${C_RESET}"
+    log_msg "${P_ACTION}     3. HQ_RTR: ${C_CYAN}${m2_br_srv_ansible_rtr_user}@${hqrtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
+    log_msg "${P_ACTION}     4. BR_RTR: ${C_CYAN}${m2_br_srv_ansible_rtr_user}@${brrtr_target_wan_ip_val}${C_RESET} (Пароль: ${C_YELLOW}$DEF_NET_ADMIN_PASS${C_RESET})"
     log_msg "${P_ACTION} ${C_BOLD_YELLOW}После успешного копирования ключа на ВСЕ указанные хосты, вернитесь в этот терминал и продолжите выполнение скрипта.${C_RESET}"
     
     touch "$flag_manual_ssh_copy_pending_val"
     return 2
 }
 
-# Функция: setup_brsrv_m2_ansible_cfg_files
+# Функция: setup_br_srv_m2_ansible_cfg_files
 # Назначение: Создает конфигурационные файлы Ansible и проверяет доступность хостов.
-setup_brsrv_m2_ansible_cfg_files() {
+setup_br_srv_m2_ansible_cfg_files() {
     local vm_role_code="BRSRV"; local mod_num_val="2"
-    local flag_manual_ssh_copy_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_brsrv_m2_ansible_ssh_copy_id_pmt_pending_manual.flag"
+    local flag_manual_ssh_copy_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_br_srv_m2_ansible_ssh_copy_id_pmt_pending_manual.flag"
     if [[ ! -f "$flag_manual_ssh_copy_pending_prev_step_val" ]]; then
         log_msg "${P_WARN} Предыдущий шаг (копирование SSH-ключей Ansible) не был отмечен как ожидающий. Убедитесь, что ключи скопированы."
     fi
 
-    log_msg "${P_ACTION} Создание конфигурационных файлов Ansible на BRSRV..."
+    log_msg "${P_ACTION} Создание конфигурационных файлов Ansible на BR_SRV..."
     
-    local hqsrv_ansible_ip_val; hqsrv_ansible_ip_val=$(get_ip_only "$m1_hqsrv_lan_ip")
+    local hqsrv_ansible_ip_val; hqsrv_ansible_ip_val=$(get_ip_only "$m1_hq_srv_lan_ip")
     local hqsrv_ansible_ssh_port_val="$DEF_SSH_PORT"
-    local hqcli_ansible_ip_val; hqcli_ansible_ip_val=$(get_ip_only "$m1_hqcli_dhcp_reserved_ip_def")
-    local hqrtr_ansible_wan_ip_val; hqrtr_ansible_wan_ip_val=$(get_ip_only "$m1_hqrtr_wan_ip")
-    local brrtr_ansible_wan_ip_val; brrtr_ansible_wan_ip_val=$(get_ip_only "$m1_brrtr_wan_ip")
-    local brsrv_ansible_self_ip_val; brsrv_ansible_self_ip_val=$(get_ip_only "$m1_brsrv_lan_ip")
+    local hqcli_ansible_ip_val; hqcli_ansible_ip_val=$(get_ip_only "$m1_hq_cli_dhcp_reserved_ip_def")
+    local hqrtr_ansible_wan_ip_val; hqrtr_ansible_wan_ip_val=$(get_ip_only "$m1_hq_rtr_wan_ip")
+    local brrtr_ansible_wan_ip_val; brrtr_ansible_wan_ip_val=$(get_ip_only "$m1_br_rtr_wan_ip")
+    local brsrv_ansible_self_ip_val; brsrv_ansible_self_ip_val=$(get_ip_only "$m1_br_srv_lan_ip")
     local brsrv_ansible_self_ssh_port_val="$DEF_SSH_PORT"
 
     mkdir -p /etc/ansible
     
     if ! cat <<EOF > /etc/ansible/hosts
 [hq]
-${hqsrv_ansible_ip_val} ansible_user=${m2_brsrv_ansible_hqsrv_user} ansible_port=${hqsrv_ansible_ssh_port_val}
-${hqcli_ansible_ip_val} ansible_user=${m2_brsrv_ansible_hqcli_user}
-${hqrtr_ansible_wan_ip_val} ansible_user=${m2_brsrv_ansible_rtr_user}
+${hqsrv_ansible_ip_val} ansible_user=${m2_br_srv_ansible_hq_srv_user} ansible_port=${hqsrv_ansible_ssh_port_val}
+${hqcli_ansible_ip_val} ansible_user=${m2_br_srv_ansible_hq_cli_user}
+${hqrtr_ansible_wan_ip_val} ansible_user=${m2_br_srv_ansible_rtr_user}
 
 [br]
-${brrtr_ansible_wan_ip_val} ansible_user=${m2_brsrv_ansible_rtr_user}
-${brsrv_ansible_self_ip_val} ansible_user=${m2_brsrv_ansible_hqsrv_user} ansible_port=${brsrv_ansible_self_ssh_port_val} ansible_connection=local
+${brrtr_ansible_wan_ip_val} ansible_user=${m2_br_srv_ansible_rtr_user}
+${brsrv_ansible_self_ip_val} ansible_user=${m2_br_srv_ansible_hq_srv_user} ansible_port=${brsrv_ansible_self_ssh_port_val} ansible_connection=local
 EOF
     then
         log_msg "${P_ERROR} Ошибка записи в /etc/ansible/hosts."; return 1
@@ -398,10 +398,10 @@ EOF
     fi
 }
 
-# Функция: setup_brsrv_m2_docker_mediawiki_inst_p1_compose_up
+# Функция: setup_br_srv_m2_docker_mediawiki_inst_p1_compose_up
 # Назначение: Установка Docker, Docker Compose и запуск MediaWiki (Часть 1).
-setup_brsrv_m2_docker_mediawiki_inst_p1_compose_up() {
-    log_msg "${P_ACTION} Установка Docker, Docker Compose и запуск MediaWiki (Часть 1) на BRSRV..."
+setup_br_srv_m2_docker_mediawiki_inst_p1_compose_up() {
+    log_msg "${P_ACTION} Установка Docker, Docker Compose и запуск MediaWiki (Часть 1) на BR_SRV..."
     if ! ensure_pkgs "docker docker-compose" "docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose"; then
         log_msg "${P_ERROR} Не удалось установить Docker и/или Docker Compose."
         return 1
@@ -422,18 +422,18 @@ setup_brsrv_m2_docker_mediawiki_inst_p1_compose_up() {
         return 1
     fi
 
-    local wiki_db_vol_name_val="$m2_brsrv_docker_wiki_dbvolume_name"
-    local wiki_img_vol_name_val="$m2_brsrv_docker_wiki_imagesvolume_name"
+    local wiki_db_vol_name_val="$m2_br_srv_docker_wiki_dbvolume_name"
+    local wiki_img_vol_name_val="$m2_br_srv_docker_wiki_imagesvolume_name"
     docker volume inspect "$wiki_db_vol_name_val" &>/dev/null || (docker volume create "$wiki_db_vol_name_val" && log_msg "${P_OK} Docker volume ${C_GREEN}$wiki_db_vol_name_val${C_RESET} создан.")
     docker volume inspect "$wiki_img_vol_name_val" &>/dev/null || (docker volume create "$wiki_img_vol_name_val" && log_msg "${P_OK} Docker volume ${C_GREEN}$wiki_img_vol_name_val${C_RESET} создан.")
     reg_sneaky_cmd "docker volume create $wiki_db_vol_name_val"
     reg_sneaky_cmd "docker volume create $wiki_img_vol_name_val"
 
-    local wiki_db_pass_val; ask_param "Пароль для пользователя БД MediaWiki ('${m2_brsrv_wiki_db_user}')" "$m2_brsrv_wiki_db_pass_def" "wiki_db_pass_val"
+    local wiki_db_pass_val; ask_param "Пароль для пользователя БД MediaWiki ('${m2_br_srv_wiki_db_user}')" "$m2_br_srv_wiki_db_pass_def" "wiki_db_pass_val"
     local wiki_ext_port_on_brsrv_def_val="$m2_nginx_wiki_backend_port_def"
-    local wiki_ext_port_on_brsrv_val; ask_val_param "Порт на BRSRV для доступа к MediaWiki" "$wiki_ext_port_on_brsrv_def_val" "is_port_valid" "wiki_ext_port_on_brsrv_val"
+    local wiki_ext_port_on_brsrv_val; ask_val_param "Порт на BR_SRV для доступа к MediaWiki" "$wiki_ext_port_on_brsrv_def_val" "is_port_valid" "wiki_ext_port_on_brsrv_val"
     
-    local docker_compose_pth_val="$m2_brsrv_docker_compose_pth"
+    local docker_compose_pth_val="$m2_br_srv_docker_compose_pth"
     mkdir -p "$(dirname "$docker_compose_pth_val")" && chown sshuser:sshuser "$(dirname "$docker_compose_pth_val")"
 
     if ! cat << EOF > "$docker_compose_pth_val"
@@ -458,7 +458,7 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: mediawiki
-      MYSQL_USER: ${m2_brsrv_wiki_db_user}
+      MYSQL_USER: ${m2_br_srv_wiki_db_user}
       MYSQL_PASSWORD: ${wiki_db_pass_val}
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     volumes:
@@ -487,48 +487,48 @@ EOF
     fi
 }
 
-# Функция: setup_brsrv_m2_docker_mediawiki_inst_p2_web_setup_pmt
+# Функция: setup_br_srv_m2_docker_mediawiki_inst_p2_web_setup_pmt
 # Назначение: Информирует о необходимости веб-установки MediaWiki.
-setup_brsrv_m2_docker_mediawiki_inst_p2_web_setup_pmt() {
+setup_br_srv_m2_docker_mediawiki_inst_p2_web_setup_pmt() {
     local vm_role_code="BRSRV"; local mod_num_val="2"
     local flag_manual_web_wiki_pending_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_${FUNCNAME[0]}_pending_manual.flag"
     
-    local brsrv_lan_ip_for_url_val; brsrv_lan_ip_for_url_val=$(get_ip_only "$m1_brsrv_lan_ip")
-    local wiki_ext_port_on_brsrv_val; ask_val_param "Порт MediaWiki на BRSRV (для URL веб-установки)" "$m2_nginx_wiki_backend_port_def" "is_port_valid" "wiki_ext_port_on_brsrv_val"
-    local wiki_db_pass_pmt_val; ask_param "Пароль пользователя БД MediaWiki ('${m2_brsrv_wiki_db_user}') (тот же, что и на шаге 1)" "$m2_brsrv_wiki_db_pass_def" "wiki_db_pass_pmt_val"
+    local brsrv_lan_ip_for_url_val; brsrv_lan_ip_for_url_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local wiki_ext_port_on_brsrv_val; ask_val_param "Порт MediaWiki на BR_SRV (для URL веб-установки)" "$m2_nginx_wiki_backend_port_def" "is_port_valid" "wiki_ext_port_on_brsrv_val"
+    local wiki_db_pass_pmt_val; ask_param "Пароль пользователя БД MediaWiki ('${m2_br_srv_wiki_db_user}') (тот же, что и на шаге 1)" "$m2_br_srv_wiki_db_pass_def" "wiki_db_pass_pmt_val"
 
     log_msg "${P_ACTION} ${C_BOLD_MAGENTA}ТРЕБУЕТСЯ РУЧНОЕ ДЕЙСТВИЕ: Веб-установка MediaWiki${C_RESET}"
     log_msg "${P_ACTION}   URL для доступа: ${C_CYAN}http://${brsrv_lan_ip_for_url_val}:${wiki_ext_port_on_brsrv_val}/${C_RESET}"
-    log_msg "${P_ACTION}   ${C_DIM}(Убедитесь, что DNAT на BRRTR настроен на этот IP и порт BRSRV)${C_RESET}"
+    log_msg "${P_ACTION}   ${C_DIM}(Убедитесь, что DNAT на BR_RTR настроен на этот IP и порт BR_SRV)${C_RESET}"
     log_msg "${P_ACTION}   ${C_BOLD_YELLOW}Основные параметры для веб-установки:${C_RESET}"
     log_msg "${P_ACTION}     - Хост базы данных: ${C_YELLOW}mariadb_wiki${C_RESET}"
     log_msg "${P_ACTION}     - Имя базы данных: ${C_YELLOW}mediawiki${C_RESET}"
-    log_msg "${P_ACTION}     - Пользователь базы данных: ${C_YELLOW}${m2_brsrv_wiki_db_user}${C_RESET}"
+    log_msg "${P_ACTION}     - Пользователь базы данных: ${C_YELLOW}${m2_br_srv_wiki_db_user}${C_RESET}"
     log_msg "${P_ACTION}     - Пароль пользователя базы данных: ${C_YELLOW}${wiki_db_pass_pmt_val}${C_RESET}"
     log_msg "${P_ACTION}     - Название Вики: ${C_YELLOW}${m2_wiki_site_name}${C_RESET}"
     log_msg "${P_ACTION}     - Имя администратора: ${C_YELLOW}${m2_wiki_admin_user}${C_RESET}, Пароль: (например, ${C_YELLOW}WikiP@ssword${C_RESET})"
     log_msg "${P_ACTION} ${C_BOLD_YELLOW}ДЕЙСТВИЯ ПОЛЬЗОВАТЕЛЯ:${C_RESET}"
     log_msg "${P_ACTION}   1. ${C_GREEN}Завершите${C_RESET} процесс веб-установки MediaWiki в браузере."
     log_msg "${P_ACTION}   2. В конце установки MediaWiki предложит ${C_GREEN}скачать файл 'LocalSettings.php'${C_RESET}. Скачайте его."
-    log_msg "${P_ACTION}   3. ${C_GREEN}Скопируйте${C_RESET} этот скачанный файл 'LocalSettings.php' на сервер ${C_BOLD_MAGENTA}BRSRV${C_RESET}"
-    log_msg "${P_ACTION}      в директорию: ${C_CYAN}${m2_brsrv_wiki_localsettings_pth_on_brsrv%/*}/${C_RESET}"
-    log_msg "${P_ACTION}      Под именем: ${C_CYAN}$(basename "$m2_brsrv_wiki_localsettings_pth_on_brsrv")${C_RESET}"
+    log_msg "${P_ACTION}   3. ${C_GREEN}Скопируйте${C_RESET} этот скачанный файл 'LocalSettings.php' на сервер ${C_BOLD_MAGENTA}BR_SRV${C_RESET}"
+    log_msg "${P_ACTION}      в директорию: ${C_CYAN}${m2_br_srv_wiki_localsettings_pth_on_brsrv%/*}/${C_RESET}"
+    log_msg "${P_ACTION}      Под именем: ${C_CYAN}$(basename "$m2_br_srv_wiki_localsettings_pth_on_brsrv")${C_RESET}"
     log_msg "${P_ACTION}   4. ${C_GREEN}Вернитесь${C_RESET} в этот терминал и продолжите выполнение скрипта."
     
     touch "$flag_manual_web_wiki_pending_val"
     return 2
 }
 
-# Функция: setup_brsrv_m2_docker_mediawiki_inst_p3_apply_localsettings
+# Функция: setup_br_srv_m2_docker_mediawiki_inst_p3_apply_localsettings
 # Назначение: Применяет LocalSettings.php к MediaWiki.
-setup_brsrv_m2_docker_mediawiki_inst_p3_apply_localsettings() {
-    local vm_role_code="BRSRV"; local mod_num_val="2"
-    local flag_manual_web_wiki_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_brsrv_m2_docker_mediawiki_inst_p2_web_setup_pmt_pending_manual.flag"
+setup_br_srv_m2_docker_mediawiki_inst_p3_apply_localsettings() {
+    local vm_role_code="BR_SRV"; local mod_num_val="2"
+    local flag_manual_web_wiki_pending_prev_step_val="${FLAG_DIR_BASE}/${vm_role_code}_M${mod_num_val}_setup_br_srv_m2_docker_mediawiki_inst_p2_web_setup_pmt_pending_manual.flag"
     
-    log_msg "${P_ACTION} Применение LocalSettings.php для MediaWiki (Часть 3) на BRSRV..."
+    log_msg "${P_ACTION} Применение LocalSettings.php для MediaWiki (Часть 3) на BR_SRV..."
     
-    local localsettings_target_pth_val="$m2_brsrv_wiki_localsettings_pth_on_brsrv"
-    local docker_compose_pth_val="$m2_brsrv_docker_compose_pth"
+    local localsettings_target_pth_val="$m2_br_srv_wiki_localsettings_pth_on_brsrv"
+    local docker_compose_pth_val="$m2_br_srv_docker_compose_pth"
     local docker_compose_cmd_val; docker_compose_cmd_val=$(get_docker_compose_cmd)
 
     if [[ ! -f "$localsettings_target_pth_val" ]]; then
@@ -578,4 +578,4 @@ setup_brsrv_m2_docker_mediawiki_inst_p3_apply_localsettings() {
     fi
 }
 
-# --- Мета-комментарий: Конец функций-шагов для BRSRV - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Конец функций-шагов для BR_SRV - Модуль 2 (Сценарий: default) ---

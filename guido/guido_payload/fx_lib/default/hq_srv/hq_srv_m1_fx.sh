@@ -1,16 +1,16 @@
 #!/bin/bash
-# Файл: fx_lib/default/hqsrv/hqsrv_m1_fx.sh
-# Содержит функции-шаги для роли HQSRV, Модуль 1, сценарий "default".
+# Файл: fx_lib/default/hq_srv/hq_srv_m1_fx.sh
+# Содержит функции-шаги для роли HQ_SRV, Модуль 1, сценарий "default".
 # Этот файл подключается (source) функцией _run_step из menu.sh.
 
-# --- Мета-комментарий: Функции-шаги для HQSRV - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Функции-шаги для HQ_SRV - Модуль 1 (Сценарий: default) ---
 
-# Функция: setup_hqsrv_m1_hn
-# Назначение: Устанавливает имя хоста (FQDN) для ВМ HQSRV.
-setup_hqsrv_m1_hn() {
-    local def_fqdn_val="${EXPECTED_FQDNS["hqsrv"]}"
+# Функция: setup_hq_srv_m1_hn
+# Назначение: Устанавливает имя хоста (FQDN) для ВМ HQ_SRV.
+setup_hq_srv_m1_hn() {
+    local def_fqdn_val="${EXPECTED_FQDNS["hq_srv"]}"
     local target_fqdn_val
-    ask_param "FQDN для HQSRV" "$def_fqdn_val" "target_fqdn_val"
+    ask_param "FQDN для HQ_SRV" "$def_fqdn_val" "target_fqdn_val"
 
     log_msg "${P_ACTION} Установка имени хоста на: ${C_CYAN}$target_fqdn_val${C_RESET}..."
     if hostnamectl set-hostname "$target_fqdn_val"; then
@@ -24,16 +24,16 @@ setup_hqsrv_m1_hn() {
     fi
 }
 
-# Функция: setup_hqsrv_m1_net_iface
-# Назначение: Настраивает LAN-интерфейс для ВМ HQSRV.
-setup_hqsrv_m1_net_iface() {
-    local lan_iface_val; ask_param "LAN интерфейс HQSRV" "$m1_hqsrv_lan_iface" "lan_iface_val"
-    local lan_ip_val; ask_val_param "IP-адрес LAN HQSRV (CIDR)" "$m1_hqsrv_lan_ip" "is_ipcidr_valid" "lan_ip_val"
-    local lan_gw_val; ask_val_param "Шлюз LAN HQSRV" "$m1_hqsrv_lan_gw" "is_ipcidr_valid" "lan_gw_val"
+# Функция: setup_hq_srv_m1_net_iface
+# Назначение: Настраивает LAN-интерфейс для ВМ HQ_SRV.
+setup_hq_srv_m1_net_iface() {
+    local lan_iface_val; ask_param "LAN интерфейс HQ_SRV" "$m1_hq_srv_lan_iface" "lan_iface_val"
+    local lan_ip_val; ask_val_param "IP-адрес LAN HQ_SRV (CIDR)" "$m1_hq_srv_lan_ip" "is_ipcidr_valid" "lan_ip_val"
+    local lan_gw_val; ask_val_param "Шлюз LAN HQ_SRV" "$m1_hq_srv_lan_gw" "is_ipcidr_valid" "lan_gw_val"
     local tmp_dns1_val; ask_val_param "Основной DNS (временный, для начальной настройки)" "$DEF_DNS_PRIMARY" "is_ipcidr_valid" "tmp_dns1_val"
     local tmp_dns2_val; ask_val_param "Запасной DNS (временный, для начальной настройки)" "$DEF_DNS_SECONDARY" "is_ipcidr_valid" "tmp_dns2_val"
 
-    log_msg "${P_ACTION} Настройка LAN интерфейса HQSRV..."
+    log_msg "${P_ACTION} Настройка LAN интерфейса HQ_SRV..."
     mkdir -p "/etc/net/ifaces/${lan_iface_val}" && find "/etc/net/ifaces/${lan_iface_val}" -mindepth 1 -delete
     if ! {
         echo 'TYPE=eth' > "/etc/net/ifaces/${lan_iface_val}/options" &&
@@ -55,8 +55,8 @@ EOF
     return 0
 }
 
-# Функция: setup_hqsrv_m1_net_restart_base_ip
-setup_hqsrv_m1_net_restart_base_ip() {
+# Функция: setup_hq_srv_m1_net_restart_base_ip
+setup_hq_srv_m1_net_restart_base_ip() {
     log_msg "${P_ACTION} Перезапуск сетевой службы для применения настроек IP..."
     if systemctl restart network; then
         log_msg "${P_OK} Сетевая служба успешно перезапущена."
@@ -70,8 +70,8 @@ setup_hqsrv_m1_net_restart_base_ip() {
     fi
 }
 
-# Функция: setup_hqsrv_m1_user_sshuser
-setup_hqsrv_m1_user_sshuser() {
+# Функция: setup_hq_srv_m1_user_sshuser
+setup_hq_srv_m1_user_sshuser() {
     local username_val="sshuser"
     local target_uid_val; ask_val_param "UID для пользователя '${username_val}'" "$DEF_SSHUSER_UID" "is_uid_valid" "target_uid_val"
     local target_pass_val; ask_param "Пароль для пользователя '${username_val}'" "$DEF_SSHUSER_PASS" "target_pass_val"
@@ -104,9 +104,9 @@ setup_hqsrv_m1_user_sshuser() {
     return 0
 }
 
-# Функция: setup_hqsrv_m1_ssh_srv
-setup_hqsrv_m1_ssh_srv() {
-    log_msg "${P_ACTION} Настройка SSH-сервера на HQSRV..."
+# Функция: setup_hq_srv_m1_ssh_srv
+setup_hq_srv_m1_ssh_srv() {
+    log_msg "${P_ACTION} Настройка SSH-сервера на HQ_SRV..."
     if ! ensure_pkgs "sshd" "openssh-server"; then
         log_msg "${P_ERROR} Пакет openssh-server не установлен."
         return 1
@@ -152,9 +152,9 @@ setup_hqsrv_m1_ssh_srv() {
     fi
 }
 
-# Функция: setup_hqsrv_m1_tz
-setup_hqsrv_m1_tz() {
-    log_msg "${P_ACTION} Настройка часового пояса для HQSRV..."
+# Функция: setup_hq_srv_m1_tz
+setup_hq_srv_m1_tz() {
+    log_msg "${P_ACTION} Настройка часового пояса для HQ_SRV..."
     if ! command -v timedatectl &>/dev/null; then log_msg "${P_ERROR} timedatectl не найден."; return 1; fi
     if ! (apt-get update -y && apt-get install -y tzdata); then log_msg "${P_ERROR} Ошибка установки tzdata."; return 1; fi
     log_msg "${P_OK} Пакет tzdata установлен/обновлен."
@@ -174,36 +174,36 @@ setup_hqsrv_m1_tz() {
     fi
 }
 
-# Функция: setup_hqsrv_m1_dns_srv
-setup_hqsrv_m1_dns_srv() {
-    log_msg "${P_ACTION} Настройка DNS-сервера (dnsmasq) на HQSRV..."
+# Функция: setup_hq_srv_m1_dns_srv
+setup_hq_srv_m1_dns_srv() {
+    log_msg "${P_ACTION} Настройка DNS-сервера (dnsmasq) на HQ_SRV..."
     if ! ensure_pkgs "dnsmasq" "dnsmasq"; then
         log_msg "${P_ERROR} Пакет dnsmasq не установлен."
         return 1
     fi
 
-    local lan_iface_for_dns_val="$m1_hqsrv_lan_iface"
-    local listen_addr_def_val; listen_addr_def_val=$(get_ip_only "$m1_hqsrv_lan_ip")
-    local hqrtr_vlan_srv_ip_def_val; hqrtr_vlan_srv_ip_def_val=$(get_ip_only "$m1_hqrtr_vlan_srv_ip")
-    local hqrtr_vlan_cli_ip_def_val; hqrtr_vlan_cli_ip_def_val=$(get_ip_only "$m1_hqrtr_vlan_cli_ip")
-    local hqrtr_vlan_mgmt_ip_def_val; hqrtr_vlan_mgmt_ip_def_val=$(get_ip_only "$m1_hqrtr_vlan_mgmt_ip_def")
-    local hqcli_ip_def_val="$m1_hqcli_dhcp_reserved_ip_def"
-    local brrtr_lan_ip_def_val; brrtr_lan_ip_def_val=$(get_ip_only "$m1_brrtr_lan_ip")
-    local brsrv_lan_ip_def_val; brsrv_lan_ip_def_val=$(get_ip_only "$m1_brsrv_lan_ip")
-    local cname_moodle_target_val="$m1_hqsrv_dns_cname_moodle"
-    local cname_wiki_target_val="$m1_hqsrv_dns_cname_wiki"
+    local lan_iface_for_dns_val="$m1_hq_srv_lan_iface"
+    local listen_addr_def_val; listen_addr_def_val=$(get_ip_only "$m1_hq_srv_lan_ip")
+    local hqrtr_vlan_srv_ip_def_val; hqrtr_vlan_srv_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_srv_ip")
+    local hqrtr_vlan_cli_ip_def_val; hqrtr_vlan_cli_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_cli_ip")
+    local hqrtr_vlan_mgmt_ip_def_val; hqrtr_vlan_mgmt_ip_def_val=$(get_ip_only "$m1_hq_rtr_vlan_mgmt_ip_def")
+    local hqcli_ip_def_val="$m1_hq_cli_dhcp_reserved_ip_def"
+    local brrtr_lan_ip_def_val; brrtr_lan_ip_def_val=$(get_ip_only "$m1_br_rtr_lan_ip")
+    local brsrv_lan_ip_def_val; brsrv_lan_ip_def_val=$(get_ip_only "$m1_br_srv_lan_ip")
+    local cname_moodle_target_val="$m1_hq_srv_dns_cname_moodle"
+    local cname_wiki_target_val="$m1_hq_srv_dns_cname_wiki"
 
-    local listen_addr_val; ask_val_param "IP-адрес для прослушивания DNS (IP HQSRV)" "$listen_addr_def_val" "is_ipcidr_valid" "listen_addr_val"; listen_addr_val=$(get_ip_only "$listen_addr_val")
-    local hqrtr_vlan_srv_ip_val; ask_val_param "IP HQRTR (VLAN SRV)" "$hqrtr_vlan_srv_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_srv_ip_val"; hqrtr_vlan_srv_ip_val=$(get_ip_only "$hqrtr_vlan_srv_ip_val")
-    local hqrtr_vlan_cli_ip_val; ask_val_param "IP HQRTR (VLAN CLI)" "$hqrtr_vlan_cli_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_cli_ip_val"; hqrtr_vlan_cli_ip_val=$(get_ip_only "$hqrtr_vlan_cli_ip_val")
-    local hqrtr_vlan_mgmt_ip_val; ask_val_param "IP HQRTR (VLAN MGMT)" "$hqrtr_vlan_mgmt_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_mgmt_ip_val"; hqrtr_vlan_mgmt_ip_val=$(get_ip_only "$hqrtr_vlan_mgmt_ip_val")
-    local hqcli_ip_val; ask_val_param "IP HQCLI" "$hqcli_ip_def_val" "is_ipcidr_valid" "hqcli_ip_val"; hqcli_ip_val=$(get_ip_only "$hqcli_ip_val")
-    local brrtr_lan_ip_val; ask_val_param "IP BRRTR (LAN)" "$brrtr_lan_ip_def_val" "is_ipcidr_valid" "brrtr_lan_ip_val"; brrtr_lan_ip_val=$(get_ip_only "$brrtr_lan_ip_val")
-    local brsrv_lan_ip_val; ask_val_param "IP BRSRV (LAN)" "$brsrv_lan_ip_def_val" "is_ipcidr_valid" "brsrv_lan_ip_val"; brsrv_lan_ip_val=$(get_ip_only "$brsrv_lan_ip_val")
+    local listen_addr_val; ask_val_param "IP-адрес для прослушивания DNS (IP HQ_SRV)" "$listen_addr_def_val" "is_ipcidr_valid" "listen_addr_val"; listen_addr_val=$(get_ip_only "$listen_addr_val")
+    local hqrtr_vlan_srv_ip_val; ask_val_param "IP HQ_RTR (VLAN SRV)" "$hqrtr_vlan_srv_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_srv_ip_val"; hqrtr_vlan_srv_ip_val=$(get_ip_only "$hqrtr_vlan_srv_ip_val")
+    local hqrtr_vlan_cli_ip_val; ask_val_param "IP HQ_RTR (VLAN CLI)" "$hqrtr_vlan_cli_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_cli_ip_val"; hqrtr_vlan_cli_ip_val=$(get_ip_only "$hqrtr_vlan_cli_ip_val")
+    local hqrtr_vlan_mgmt_ip_val; ask_val_param "IP HQ_RTR (VLAN MGMT)" "$hqrtr_vlan_mgmt_ip_def_val" "is_ipcidr_valid" "hqrtr_vlan_mgmt_ip_val"; hqrtr_vlan_mgmt_ip_val=$(get_ip_only "$hqrtr_vlan_mgmt_ip_val")
+    local hqcli_ip_val; ask_val_param "IP HQ_CLI" "$hqcli_ip_def_val" "is_ipcidr_valid" "hqcli_ip_val"; hqcli_ip_val=$(get_ip_only "$hqcli_ip_val")
+    local brrtr_lan_ip_val; ask_val_param "IP BR_RTR (LAN)" "$brrtr_lan_ip_def_val" "is_ipcidr_valid" "brrtr_lan_ip_val"; brrtr_lan_ip_val=$(get_ip_only "$brrtr_lan_ip_val")
+    local brsrv_lan_ip_val; ask_val_param "IP BR_SRV (LAN)" "$brsrv_lan_ip_def_val" "is_ipcidr_valid" "brsrv_lan_ip_val"; brsrv_lan_ip_val=$(get_ip_only "$brsrv_lan_ip_val")
 
     cp /etc/dnsmasq.conf "/etc/dnsmasq.conf.bak.$(date +%F_%T)" 2>/dev/null || true
     cat <<EOF > /etc/dnsmasq.conf
-# Конфигурация DNS-сервера dnsmasq для HQSRV
+# Конфигурация DNS-сервера dnsmasq для HQ_SRV
 domain=${DOM_NAME}
 interface=${lan_iface_for_dns_val}
 listen-address=127.0.0.1,${listen_addr_val}
@@ -247,8 +247,8 @@ EOF
     fi
 }
 
-# Функция: setup_hqsrv_m1_net_restart_dns_update
-setup_hqsrv_m1_net_restart_dns_update() {
+# Функция: setup_hq_srv_m1_net_restart_dns_update
+setup_hq_srv_m1_net_restart_dns_update() {
     log_msg "${P_ACTION} Обновление конфигурации DNS (resolvconf -u) и перезапуск сети..."
     if ! (resolvconf -u && systemctl restart network); then
         log_msg "${P_ERROR} Ошибка при обновлении DNS или перезапуске сетевой службы."; return 1
@@ -261,4 +261,4 @@ setup_hqsrv_m1_net_restart_dns_update() {
     return 0
 }
 
-# --- Мета-комментарий: Конец функций-шагов для HQSRV - Модуль 1 (Сценарий: default) ---
+# --- Мета-комментарий: Конец функций-шагов для HQ_SRV - Модуль 1 (Сценарий: default) ---
