@@ -122,6 +122,7 @@ log_msg "${P_INFO} Активный сценарий ДЭ: ${C_GREEN}${g_cur_de_
 # === Блок: Загрузка файлов выбранного сценария и остальных библиотек ===
 SCENARIO_CFG_FILE="${SCENARIOS_DIR}/${g_cur_de_scenario_name}_cfg.sh"
 SCENARIO_SCN_FILE="${SCENARIOS_DIR}/${g_cur_de_scenario_name}_scn.sh"
+SCENARIO_UI_FILE="${SCENARIOS_DIR}/${g_cur_de_scenario_name}_ui.sh"
 
 # Финальная проверка перед загрузкой (хотя check_scenario_exists уже должна была это сделать)
 if [[ ! -f "$SCENARIO_CFG_FILE" || ! -f "$SCENARIO_SCN_FILE" || ! -d "${FX_LIB_DIR}/${g_cur_de_scenario_name}" ]]; then
@@ -135,6 +136,11 @@ source "$SCENARIO_CFG_FILE"
 log_msg "${P_INFO} ${C_DIM}Загрузка определений сценария: ${SCENARIO_SCN_FILE}${C_RESET}" "/dev/null"
 # shellcheck source=/dev/null
 source "$SCENARIO_SCN_FILE"
+
+if [[ -f "$SCENARIO_UI_FILE" ]]; then
+    log_msg "${P_INFO} ${C_DIM}Загрузка файла UI-сопоставлений: ${SCENARIO_UI_FILE}${C_RESET}" "/dev/null"
+    source "$SCENARIO_UI_FILE"
+fi
 
 # Подключаем файл с утилитами для sneaky режима и обработчиком выхода
 if [[ -f "${CORE_LIB_DIR}/sneaky_utils.sh" ]]; then
