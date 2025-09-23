@@ -204,8 +204,14 @@ sneaky_deep_cls() {
 sneaky_self_del() {
     if [[ "$g_sneaky_mode_en" != "y" ]]; then return 0; fi
 
-    local items_deleted_flag=0
+    # Если мы под управлением bootstrap-загрузчика, который сам выполнит очистку, то мы ничего не делаем.
+    # Мы определяем это по наличию его уникальной функции _guido_cleanup.
+    if declare -F "_guido_cleanup" &>/dev/null; then
+        log_msg "${P_INFO} ${C_DIM}[SNEAKY] Обнаружена среда bootstrap. Пропуск собственного самоуничтожения.${C_RESET}" "/dev/null"
+        return 0
+    fi
 
+    local items_deleted_flag=0
     # SCRIPT_PTH_DEL, SCRIPT_DIR, GUIDO_TEMP_DEPLOY_DIR должны быть экспортированы из guido.sh
     # CORE_LIB_DIR, SCENARIOS_DIR, FX_LIB_DIR также доступны через экспорт, если нужны
 
