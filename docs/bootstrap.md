@@ -45,6 +45,8 @@ guido_run() {
     
     base64 -d "$_GUIDO_ASSEMBLY_FILE" | xz -d | tar -xf - -C "$EXEC_DIR"
     
+    touch "${EXEC_DIR}/.guido_payload_marker"
+
     if [ -f "${EXEC_DIR}/guido.sh" ]; then
         bash "${EXEC_DIR}/guido.sh" "$@"
     else

@@ -42,7 +42,7 @@
 Этот метод используется, когда у вас есть возможность легко скопировать на целевую машину один исполняемый файл.
 
 **Подготовка:**
-*   Соберите `guido_installer.sh` с помощью флага `--legacy-installer` (см. `how_to_prepare.md`).
+*   Соберите `guido_installer.sh` с помощью флага `--legacy-installer` (см. `prepare.md`).
 *   Скопируйте `build_output/guido_installer.sh` на целевую машину.
 
 **Запуск:**
